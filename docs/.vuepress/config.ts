@@ -98,7 +98,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
 
     // 博主信息 (显示在首页侧边栏)
     blogger: {
-      avatar: 'https://cos.ywenrou.cn/blog/images%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240507210431.jpg',
+      avatar: '/img/avator.jpg',
       name: 'xiaoyang',
       slogan: '编程爱好者',
     },
