@@ -32,7 +32,7 @@ if [ -z "$GITHUB_TOKEN" ]; then
 else
   npm run build # 生成静态文件    
   msg='来自github action的自动部署'
-  githubUrl=https://OkayYang:${GITHUB_TOKEN}@git@github.com:OkayYang/OkayYang.github.io.git
+  githubUrl=https://OkayYang:${GITHUB_TOKEN}@github.com/OkayYang/OkayYang.github.io.git
   git config --global user.name "xiaoyang"
   git config --global user.email "xuxiaoyang168@gmail.com"
 fi
