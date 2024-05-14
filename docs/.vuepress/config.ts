@@ -255,26 +255,26 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
         },
       },
     ],
-    // [
-    //   'vuepress-plugin-comment', // 评论
-    //   {
-    //     choosen: 'gitalk',
-    //     options: {
-    //       clientID: 'Ov23lic8qZ2VOBnEVgle',
-    //       clientSecret: '886c98b566127dc51e2c1713686519275749f461',
-    //       repo: 'docs-discuss', // GitHub 仓库
-    //       owner: 'OkayYang', // GitHub仓库所有者
-    //       admin: ['OkayYang'], // 对仓库有写权限的人
-    //       // distractionFreeMode: true,
-    //       pagerDirection: 'last', // 'first'正序 | 'last'倒序
-    //       id: '<%- (frontmatter.permalink || frontmatter.to.path).slice(-16) %>', //  页面的唯一标识,长度不能超过50
-    //       title: '「评论」<%- frontmatter.title %>', // GitHub issue 的标题
-    //       labels: ['Gitalk', 'Comment'], // GitHub issue 的标签
-    //       body:
-    //         '页面：<%- window.location.origin + (frontmatter.to.path || window.location.pathname) %>', // GitHub issue 的内容
-    //     },
-    //   },
-    // ],
+    [
+      'vuepress-plugin-comment', // 评论
+      {
+        choosen: 'gitalk',
+        options: {
+          clientID: 'Ov23liXkh2cWHEgOKuMy',
+          clientSecret: 'c736d67e86b051461bc024174aa1f817518b8440',
+          repo: 'docs-discuss', // GitHub 仓库
+          owner: 'OkayYang', // GitHub仓库所有者
+          admin: ['OkayYang'], // 对仓库有写权限的人
+          // distractionFreeMode: true,
+          pagerDirection: 'last', // 'first'正序 | 'last'倒序
+          id: '<%- (frontmatter.permalink || frontmatter.to.path).slice(-16) %>', //  页面的唯一标识,长度不能超过50
+          title: '「评论」<%- frontmatter.title %>', // GitHub issue 的标题
+          labels: ['Gitalk', 'Comment'], // GitHub issue 的标签
+          body:
+            '页面：<%- window.location.origin + (frontmatter.to.path || window.location.pathname) %>', // GitHub issue 的内容
+        },
+      },
+    ],
     [
       '@vuepress/last-updated', // "上次更新"时间格式
       {
