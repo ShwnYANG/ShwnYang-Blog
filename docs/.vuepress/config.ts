@@ -196,6 +196,14 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
         s.parentNode.insertBefore(bp, s);
       })();
       `
+    ],
+    [
+      'script',
+      {
+        src: '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js',
+        async: true,
+        defer: true
+      }
     ]
   ],
 
@@ -289,21 +297,18 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     [
       'vuepress-plugin-comment',
       {
-        choosen: 'waline',
+        choosen: 'valine',
         options: {
-          serverURL: 'https://my-blog-theme.vercel.app',
-          login: 'enable',
-          wordLimit: 200,
-          pageSize: 10, 
+          el: '#valine-vuepress-comment',
+          appId: process.env.VALINE_APP_ID || '',
+          appKey: process.env.VALINE_APP_KEY || '',
+          placeholder: '请留下你的想法~',
+          path: '<%- frontmatter.permalink %>',
           avatar: 'monsterid',
-          meta: ['nick', 'mail', 'link'],
-          requiredMeta: ['nick', 'mail'],
-          lang: 'zh-CN',
-          dark: 'auto',
-          emoji: [
-            '//unpkg.com/@waline/emojis@1.1.0/weibo',
-            '//unpkg.com/@waline/emojis@1.1.0/bilibili'
-          ],
+          meta: ['nick', 'mail'],
+          requiredMeta: ['nick'],
+          pageSize: 10,
+          enableQQ: true,
           visitor: true
         },
       },

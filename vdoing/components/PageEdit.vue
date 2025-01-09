@@ -20,6 +20,10 @@
     <div class="last-updated" v-if="lastUpdated">
       <span class="prefix">{{ lastUpdatedText }}:</span>
       <span class="time">{{ lastUpdated }}</span>
+      <span class="split">|</span>
+      <span id="busuanzi_container_page_pv">
+        阅读量 <span id="busuanzi_value_page_pv"></span>
+      </span>
     </div>
   </div>
 </template>
@@ -170,6 +174,10 @@ export default {
     .time
       font-weight 400
       color #aaa
+    .split
+      margin 0 0.5rem
+      color var(--textColor)
+      opacity 0.8
 @media (max-width $MQMobile)
   .page-edit
     .edit-link, .tags

@@ -11,18 +11,19 @@
       ></a>
     </div>
 
-    <!--Vdoing主题遵循MIT协议，完全开源且免费。如果您对主题的修改并不大，希望您保留主题的链接。-->
-    Theme by
-    <a
-      href="https://github.com/xugaoyi/vuepress-theme-vdoing"
-      target="_blank"
-      title="本站主题"
-      >Vdoing</a
-    >
-    <template v-if="footer">
-      | Copyright © {{ footer.createYear }}-{{ new Date().getFullYear() }}
-      <span v-html="footer.copyrightInfo"></span>
-    </template>
+    <div class="site-data">
+      <span id="busuanzi_container_site_pv">
+        总访问量 <span id="busuanzi_value_site_pv"></span> 次
+      </span>
+      <span class="split">|</span>
+      <span id="busuanzi_container_site_uv">
+        访客数 <span id="busuanzi_value_site_uv"></span> 人
+      </span>
+    </div>
+
+    <div class="footer-text">
+      <span>{{ footer.copyright }}</span>
+    </div>
   </div>
 </template>
 
@@ -69,4 +70,14 @@ export default {
 .no-sidebar .footer
   width auto
   padding-left 1.5rem
+  .site-data
+    padding 0.3rem 1rem
+    font-size 0.85rem
+    color var(--textColor)
+    .split
+      margin 0 0.5rem
+    #busuanzi_value_site_pv,
+    #busuanzi_value_site_uv
+      font-weight bold
+      color $accentColor
 </style>
