@@ -80,7 +80,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
 
     // updateBar: { // 最近更新栏
     //   showToArticle: true, // 显示到文章页底部，默认true
-    //   moreArticle: '/archives' // “更多文章”跳转的页面，默认'/archives'
+    //   moreArticle: '/archives' // "更多文章"跳转的页面，默认'/archives'
     // },
     // rightMenuBar: false, // 是否显示右侧文章大纲栏，默认true (屏宽小于1300px下无论如何都不显示)
     // sidebarOpen: false, // 初始状态是否打开左侧边栏，默认true
@@ -166,6 +166,37 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     //     src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
     //   },
     // ], // 网站关联Google AdSense 与 html格式广告支持（你可以去掉）
+    [
+      'script',
+      {},
+      `
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?xxxxxxxxxx";
+        var s = document.getElementsByTagName("script")[0]; 
+        s.parentNode.insertBefore(hm, s);
+      })();
+      `
+    ],
+    [
+      'script',
+      {},
+      `
+      (function() {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+        }
+        else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+      })();
+      `
+    ]
   ],
 
 
@@ -256,22 +287,24 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
       },
     ],
     [
-      'vuepress-plugin-comment', // 评论
+      'vuepress-plugin-comment',
       {
-        choosen: 'gitalk',
+        choosen: 'waline',
         options: {
-          clientID: 'Ov23liXkh2cWHEgOKuMy',
-          clientSecret: 'c736d67e86b051461bc024174aa1f817518b8440',
-          repo: 'docs-discuss', // GitHub 仓库
-          owner: 'OkayYang', // GitHub仓库所有者
-          admin: ['OkayYang'], // 对仓库有写权限的人
-          // distractionFreeMode: true,
-          pagerDirection: 'last', // 'first'正序 | 'last'倒序
-          id: '<%- (frontmatter.permalink || frontmatter.to.path).slice(-16) %>', //  页面的唯一标识,长度不能超过50
-          title: '「评论」<%- frontmatter.title %>', // GitHub issue 的标题
-          labels: ['Gitalk', 'Comment'], // GitHub issue 的标签
-          body:
-            '页面：<%- window.location.origin + (frontmatter.to.path || window.location.pathname) %>', // GitHub issue 的内容
+          serverURL: 'https://my-blog-theme.vercel.app',
+          login: 'enable',
+          wordLimit: 200,
+          pageSize: 10, 
+          avatar: 'monsterid',
+          meta: ['nick', 'mail', 'link'],
+          requiredMeta: ['nick', 'mail'],
+          lang: 'zh-CN',
+          dark: 'auto',
+          emoji: [
+            '//unpkg.com/@waline/emojis@1.1.0/weibo',
+            '//unpkg.com/@waline/emojis@1.1.0/bilibili'
+          ],
+          visitor: true
         },
       },
     ],
