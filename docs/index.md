@@ -84,3 +84,6 @@ home: true
 - **GitHub**: <https://github.com/xugaoyi>
 
 </br>  -->
+<ClientOnly>
+  <WebInfo/>
+</ClientOnly>
