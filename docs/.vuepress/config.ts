@@ -296,7 +296,8 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
           requiredMeta: ['nick'],
           pageSize: 10,
           enableQQ: true,
-          visitor: true
+          visitor: true,
+          avatar_cdn: 'https://cravatar.cn/avatar/'
         },
       },
     ],
