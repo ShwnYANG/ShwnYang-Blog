@@ -1,0 +1,744 @@
+---
+title: Spring介绍
+date: 2025-02-18 21:30:32
+permalink: /pages/43cd58/
+categories:
+  - Java
+  - 八股文
+tags:
+  - 
+author: 
+  name: xiaoyang
+  link: https://github.com/OkayYang
+---
+# Spring框架
+
+Spring 是一个轻量级、开源的 Java 开发框架，提供 **依赖注入（DI）** 和 **面向切面编程（AOP）** 机制，简化 Java 企业级开发。它涵盖 **Spring Core（核心容器）、Spring MVC（Web 开发）、Spring JDBC（数据访问）、Spring Security（安全框架）、Spring Boot（简化配置）** 及 **Spring Cloud（微服务架构）**，支持高效的 **事务管理、REST API 开发、微服务架构** 等，广泛应用于企业级 Java 应用的开发。
+
+![image-20250218222443668](https://cos.ywenrou.cn/blog/images/image-20250218222443668.png)
+
+## 1. 什么是 Spring 容器？
+
+Spring 容器是 Spring 框架中的一个核心组件，负责管理应用中的所有 Bean，并实现 **依赖注入（Dependency Injection, DI）**。Spring 容器的主要作用包括：
+
+- 解析配置文件或注解，扫描并加载 Bean 定义
+- 维护 Bean 的生命周期，包括创建、依赖注入、初始化、销毁
+- 提供 Bean 之间的依赖管理，如单例、懒加载、循环依赖等
+
+Spring 容器的主要接口：
+
+- **BeanFactory**：Spring 的底层容器，提供最基本的 IOC 容器功能，如 `DefaultListableBeanFactory`
+- **ApplicationContext**：继承 `BeanFactory`，提供更强大的功能，如事件发布、国际化支持等，如 `ClassPathXmlApplicationContext`、`AnnotationConfigApplicationContext` 等
+
+## 2. Spring 容器的启动流程
+
+Spring 容器的启动主要是 **ApplicationContext** 的创建过程，核心流程如下：
+
+### （1）ApplicationContext 的创建
+
+根据不同的配置方式，Spring 提供了几种 `ApplicationContext`：
+
+- `ClassPathXmlApplicationContext`：基于 XML 配置
+- `AnnotationConfigApplicationContext`：基于 Java 代码和注解
+
+Spring 启动的主要入口：
+
+```java
+ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+```
+
+**获取Bean方式：**
+
+- XML 配置方式：解析 XML 文件，获取 Bean 的定义
+- 注解方式：扫描 `@ComponentScan` 指定的包，获取所有 `@Component`、`@Service`、`@Repository`、`@Controller` 标注的类
+- Java 配置方式：Spring 会扫描 `@Configuration`然后将其和所有@Bean标记的方法解析为 `BeanDefinition`，存入 `BeanDefinitionMap`。
+
+### （2）BeanDefinition 解析和存储
+
+Spring 会把所有扫描到的 Bean 解析为 `BeanDefinition`，存入 **BeanDefinitionMap**：
+
+```java
+Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
+```
+
+`BeanDefinition` 主要存储：
+
+- **Bean 的类信息**（className）
+- **作用域**（单例 `singleton` 或多例 `prototype`）
+- **构造器参数**
+- **依赖关系**
+- **是否懒加载**
+
+### （3）实例化 Bean
+
+- 通过 `BeanFactory` 遍历 `BeanDefinitionMap`，判断是否要创建 Bean（非懒加载和单例才创建，@Lazy // 只有 getBean("myService") 时才创建）
+- 反射调用构造方法创建 Bean
+- 依赖注入（有一个坑，循环依赖注入后面会讲）
+- 初始化（执行 `@PostConstruct` 或 `InitializingBean`）
+- 放入 **单例池**（`singletonObjects`）
+
+## 3. 怎么创建 Bean（IoC 机制解析）
+
+Spring 采用 **IoC（控制反转）** 来管理 Bean，核心是 `BeanFactory.getBean()` 方法，创建 Bean 的完整流程如下：
+
+### （1）查询 Bean
+
+Spring 通过 `getBean(beanName)` 方法获取 Bean：
+
+```java
+Object bean = singletonObjects.get(beanName);
+if (bean != null) {
+    return bean;
+}
+```
+
+**如果 Bean 已经存在于 `singletonObjects`（单例池），直接返回，否则执行创建过程。**
+
+### （2）实例化 Bean
+
+如果 `singletonObjects` 里没有该 Bean，就去 `BeanDefinitionMap` 中查找 `BeanDefinition` 并进行实例化。
+
+实例化方式：
+
+- 默认通过 **反射调用无参构造方法** 创建对象
+- 该 Bean 的 **依赖项** 可能还是 `null`
+- 这一步 Bean 只是被 **创建**，但**还未进行属性填充和初始化**
+
+示例代码：
+
+```java
+Class<?> clazz = beanDefinition.getBeanClass();
+Constructor<?> constructor = clazz.getDeclaredConstructor();
+Object instance = constructor.newInstance();
+```
+
+### （3）属性注入（依赖注入）
+
+Spring 进行依赖注入：
+
+- 解析 `@Autowired` 或 XML 配置的依赖关系
+- 递归调用 `getBean()` 获取依赖项
+- 通过 **反射调用 setter 方法或直接赋值**
+
+示例：
+
+```java
+Field field = clazz.getDeclaredField("userService");
+field.setAccessible(true);
+field.set(instance, getBean(field.getType().getName()));
+```
+
+### （4）初始化
+
+初始化阶段：
+
+1. **执行 `InitializingBean` 接口的 `afterPropertiesSet()`**
+2. **执行 `@PostConstruct` 标注的方法**
+3. **执行 `BeanPostProcessor`（前置 & 后置处理）**
+
+示例：
+
+```java
+if (bean instanceof InitializingBean) {
+    ((InitializingBean) bean).afterPropertiesSet();
+}
+```
+
+### （5）放入单例池
+
+完成初始化后，Bean 进入 `singletonObjects`（单例池）：
+
+```java
+singletonObjects.put(beanName, instance);
+```
+
+**后续 `getBean()` 直接从单例池获取，无需重新创建。**
+
+## 4. Spring 解决循环依赖
+
+在 Spring 容器中，循环依赖（Circular Dependency）指的是 **多个 Bean 之间存在相互依赖**，导致在实例化过程中出现递归调用，最终抛出 `BeanCurrentlyInCreationException`。
+
+Spring **默认支持** **单例（singleton）** Bean 的循环依赖，并通过 **三级缓存（三级 Map）** 解决问题，但 **原型（prototype） Bean 也叫多例Bean的循环依赖默认不支持，每次调用 `getBean()` 都会创建一个新的实例**。
+
+### 4.1 循环依赖的类型
+
+Spring 中的循环依赖主要分为：
+
+1. 构造器循环依赖（不支持）
+   - A 通过构造方法依赖 B，B 通过构造方法依赖 A
+   - **Spring 无法解决，会抛出 `BeanCurrentlyInCreationException`**
+2. Setter/字段循环依赖（支持）
+   - A 通过 `@Autowired` 依赖 B，B 通过 `@Autowired` 依赖 A
+   - **Spring 通过三级缓存解决**
+3. `prototype` 作用域循环依赖（不支持）
+   - `prototype` Bean **不会** 放入 Spring 容器的单例池，因此 **Spring 不能缓存它**，从而无法解决循环依赖。
+
+### 4.2 三级缓存机制
+
+Spring 通过 **三级缓存** 解决 **单例 Bean 的循环依赖**，具体步骤如下：
+
+| 级别     | Map 名称                | 作用                                                       |
+| -------- | ----------------------- | ---------------------------------------------------------- |
+| 一级缓存 | `singletonObjects`      | **存放完全初始化的单例 Bean**                              |
+| 二级缓存 | `earlySingletonObjects` | **存放半成品 Bean（已被 AOP 代理但尚未初始化完成的对象）** |
+| 三级缓存 | `singletonFactories`    | **存放 Bean 工厂（用于创建代理对象）**                     |
+
+Spring 使用三级缓存而不是二级缓存的原因是：**Spring 中最终要交付的可能是经过 AOP 代理的对象，而不是原始对象。代理对象的创建是在 Bean 初始化阶段完成的，但在循环依赖场景下需要提前创建代理对象。**
+
+**完整流程：**
+
+1. 实例化 Bean A（A 依赖 B）
+   - Spring 解析 `@Autowired`，发现 A 依赖 B
+   - 在 `singletonFactories` 放入一个 **A 的 ObjectFactory**
+2. 实例化 Bean B（B 依赖 A）
+   - Spring 解析 `@Autowired`，发现 B 依赖 A
+   - **从 `singletonFactories` 获取 A 的 ObjectFactory，并实例化 经过AOP代理的对象A**
+   - **A 进入 `earlySingletonObjects`**
+3. B 依赖注入完成，进入 `singletonObjects`
+   - B 完全初始化后放入 `singletonObjects`
+4. A 继续完成属性填充，进入 `singletonObjects`
+   - A 获取到完整的 B 之后，也完成初始化，放入 `singletonObjects`
+
+### 4.3 代码示例
+
+### **（1）Setter 方式（Spring 可自动解决）**
+
+```java
+@Component
+class A {
+    @Autowired
+    private B b;
+}
+
+@Component
+class B {
+    @Autowired
+    private A a;
+}
+```
+
+✅ Spring 通过三级缓存解决 **Setter 方式循环依赖**。
+
+------
+
+### **（2）构造器循环依赖（Spring 无法解决）**
+
+```java
+@Component
+class A {
+    private final B b;
+    @Autowired
+    public A(B b) {
+        this.b = b;
+    }
+}
+
+@Component
+class B {
+    private final A a;
+    @Autowired
+    public B(A a) {
+        this.a = a;
+    }
+}
+```
+
+⛔ Spring **无法解决** 构造器注入的循环依赖，会抛出 `BeanCurrentlyInCreationException`。
+
+**解决方法：**
+
+1. **改用 `@Lazy`**
+
+   ```java
+   @Component
+   class A {
+       @Autowired
+       @Lazy
+       private B b;
+   }
+   
+   @Component
+   class B {
+       @Autowired
+       private A a;
+   }
+   ```
+
+   - **`@Lazy` 让 Spring 只在需要时创建 Bean，从而避免循环依赖。**
+
+2. **改用 `Setter` 注入**
+
+   - **避免构造器直接注入对方**
+
+3. **使用 `ObjectProvider`（Spring 4.3+）**
+
+   ```java
+   @Component
+   class A {
+       private final B b;
+       
+       @Autowired
+       public A(ObjectProvider<B> bProvider) {
+           this.b = bProvider.getIfAvailable();
+       }
+   }
+   ```
+
+   - **Spring 只在需要时创建 B，从而避免循环依赖。**
+
+------
+
+### **（3）`prototype` 作用域的循环依赖**
+
+```java
+@Component
+@Scope("prototype")
+class A {
+    @Autowired
+    private B b;
+}
+
+@Component
+@Scope("prototype")
+class B {
+    @Autowired
+    private A a;
+}
+```
+
+⛔ Spring **不支持 `prototype` Bean 的循环依赖**，因为 `prototype` Bean **不会进入 `singletonObjects`**，无法通过缓存解决循环引用。
+
+**解决方案：**
+
+1. **使用 `ObjectFactory` 或 `ObjectProvider`**
+
+   ```java
+   @Component
+   @Scope("prototype")
+   class A {
+       @Autowired
+       private ObjectProvider<B> bProvider;
+       
+       public B getB() {
+           return bProvider.getIfAvailable();
+       }
+   }
+   ```
+
+   - `ObjectProvider` 让 Spring **延迟加载** 依赖项，避免循环依赖。
+
+2. **使用 `@Lazy`**
+
+   ```java
+   @Component
+   @Scope("prototype")
+   class A {
+       @Autowired
+       @Lazy
+       private B b;
+   }
+   ```
+
+   - **`@Lazy` 让 Spring 只在需要时创建 B，避免循环依赖。**
+
+------
+
+### 4.4 总结
+
+| 依赖类型                     | Spring 解决方式                                 |
+| ---------------------------- | ----------------------------------------------- |
+| **构造器循环依赖**           | ❌ 不支持（可用 `@Lazy`、`ObjectProvider` 解决） |
+| **Setter 方式循环依赖**      | ✅ Spring 通过 **三级缓存** 解决                 |
+| **prototype 作用域循环依赖** | ❌ 不支持（可用 `ObjectProvider` 解决）          |
+
+✅ **Spring 默认支持 `singleton` Bean 的循环依赖**，通过 **三级缓存机制** 解决
+ ⛔ **`prototype` 和 `@Autowired` 构造器注入的循环依赖无法自动解决**，需用 `@Lazy` 或 `ObjectProvider` 规避。
+
+这样，Spring 既能保证 **性能**（不提前创建 Bean），又能解决 **Setter 循环依赖**。
+
+## 5.@Autowired和 @Resource区别
+
+`@Autowired` 和 `@Resource` 都是 **Spring** 用于 **依赖注入（Dependency Injection, DI）** 的注解，但它们有以下主要区别：
+
+### 5.1 `@Autowired`（Spring 提供的依赖注入方式）
+
+**特点**
+
+- **Spring 提供**，基于 **Spring 依赖注入机制**（JDK 反射 + BeanFactory）。
+- **默认按类型（byType）注入，然后按照名字（byName）**如果有多个同类型的 Bean，可以结合 `@Qualifier` 指定具体的 Bean。
+- **只能用于 Spring 容器管理的 Bean**，不能注入非 Spring Bean 对象。
+- **可以用于构造方法、字段、Setter 方法、参数**。
+
+**示例**
+
+#### **（1）默认按类型注入**
+
+```java
+@Component
+public class UserService {
+}
+@Component
+public class OrderService {
+    @Autowired  // 按类型注入 UserService
+    private UserService userService;
+}
+```
+
+------
+
+#### **（2）配合 `@Qualifier` 解决多个 Bean**
+
+如果同一个类型有多个 Bean，必须使用 `@Qualifier` 指定：
+
+```java
+@Component("userService1")
+public class UserServiceImpl1 implements UserService { }
+
+@Component("userService2")
+public class UserServiceImpl2 implements UserService { }
+@Component
+public class OrderService {
+    @Autowired
+    @Qualifier("userService1") // 指定注入 userService1
+    private UserService userService;
+}
+```
+
+------
+
+### 5.2 @Resource（JDK `javax.annotation.Resource` 提供）
+
+**特点**
+
+- **Java 提供**，属于 JSR-250 规范，Spring 只是对它提供了支持。
+- **默认按名称（byName）注入**，如果找不到匹配的 Bean **才会按类型（byType）注入**。
+- **可以用于非 Spring Bean 的注入**（如 JNDI 资源）。
+- **只能用于字段或 Setter 方法**，不能用于构造方法或参数。
+
+**示例**
+
+### **（1）默认按名称注入**
+
+```java
+@Component("userService")
+public class UserService {
+}
+@Component
+public class OrderService {
+    @Resource(name = "userService") // 按名称查找 "userService" Bean
+    private UserService userService;
+}
+```
+
+### **（2）如果 `name` 没有指定，按字段名匹配**
+
+```java
+@Component
+public class OrderService {
+    @Resource  // 自动查找名为 "userService" 的 Bean
+    private UserService userService;
+}
+```
+
+相当于：
+
+```java
+@Resource(name = "userService")
+private UserService userService;
+```
+
+------
+
+### 5.3. `@Autowired` vs `@Resource` 对比
+
+|                              | `@Autowired`                      | `@Resource`                |
+| ---------------------------- | --------------------------------- | -------------------------- |
+| **提供方**                   | Spring                            | Java（JSR-250 规范）       |
+| **默认注入方式**             | **按类型（byType）**              | **按名称（byName）**       |
+| **支持按名称注入**           | 需要 `@Qualifier("beanName")`     | 默认按名称，找不到才按类型 |
+| **适用范围**                 | 构造方法、字段、Setter、参数      | 只能用于字段和 Setter      |
+| **是否支持非 Spring Bean**   | ❌ 只能注入 Spring 容器管理的 Bean | ✅ 支持 JNDI 资源注入       |
+| **是否必须在 Spring 容器中** | ✅ 是                              | ❌ 不是必须                 |
+
+### 5.4 什么时候用 `@Autowired`？什么时候用 `@Resource`？
+
+**✅ 使用 `@Autowired`**
+
+- **如果你只在 Spring 容器内管理 Bean，推荐使用 `@Autowired`**，因为它是 Spring 官方提供的注解，支持 `@Qualifier` 更灵活。
+
+**✅ 使用 `@Resource`**
+
+- **如果你的项目是 JavaEE 规范（比如 JNDI 资源）**，建议使用 `@Resource`，因为它符合 JSR-250 规范。
+- **如果你的 Bean 需要按名称注入**，但你不想使用 `@Qualifier`，可以直接使用 `@Resource(name = "beanName")`。
+
+### 5.5  `@Autowired` 和 `@Resource` 源码解析
+
+**📌 `@Autowired` 底层实现**
+
+```java
+@Autowired
+private UserService userService;
+```
+
+Spring **解析 `@Autowired`** 的核心逻辑：
+
+```java
+public Object doResolveDependency(DependencyDescriptor descriptor, String beanName) {
+    return getBean(descriptor.getDependencyType());
+}
+```
+
+它 **先查找类型匹配的 Bean**，找不到才报错。
+
+**📌 `@Resource` 底层实现**
+
+```java
+@Resource(name = "userService")
+private UserService userService;
+```
+
+Spring **解析 `@Resource`**：
+
+```java
+Object getResource(String name) {
+    if (name != null) {
+        return getBean(name);
+    } else {
+        return getBeanByType();
+    }
+}
+```
+
+它 **优先按名称（byName）查找**，找不到才按类型（byType）查找。
+
+### 5.6 **总结**
+
+- `@Autowired` **默认按类型**（byType）查找，找不到可结合 `@Qualifier` 按名称。
+- `@Resource` **默认按名称**（byName）查找，找不到才按类型。
+- `@Autowired` **适用于所有 Spring 管理的 Bean**，但 `@Resource` **还能注入 JNDI 资源**。
+- `@Autowired` **可以用在构造方法、参数**，`@Resource` 只能用于 **字段和 Setter**。
+
+**👉 最佳实践：**
+
+- **Spring Boot 项目推荐用 `@Autowired`**
+- **老项目或 J2EE 项目可用 `@Resource`**（如 JNDI 注入）
+
+🚀 **Spring 默认推荐 `@Autowired`**，但 `@Resource` 在某些场景下更好用！
+
+## 6. Bean 的生命周期
+
+Spring Bean 的生命周期主要包括 **创建、实例化、初始化、存入单例池、使用、销毁**。流程如下：
+
+### 6.1 详细流程
+
+1. **创建（Create）**：Spring 解析 `BeanDefinition`，准备创建 Bean。
+2. **实例化（Instantiation）**：通过 **反射** 调用 **无参构造方法** 实例化 Bean（此时 Bean 还未进行属性注入）。
+3. 初始化（Initialization）：
+   - **BeanPostProcessor**（`postProcessBeforeInitialization()`）：初始化前增强。
+   - 执行 `@PostConstruct` / 实现 `InitializingBean#afterPropertiesSet()` / `init-method`。
+   - **BeanPostProcessor**（`postProcessAfterInitialization()`）：初始化后增强。
+4. 加入单例池（Singleton Pool）：
+   - 单例模式下，Bean 存入 **`singletonObjects`**（Spring 容器管理的单例池）。
+5. **使用（Using）**：在程序运行期间被调用。
+6. 销毁（Destroy）：
+   - **程序正常运行**：Bean 一直存在，不会销毁。
+   - 调用 `close()` 或 `shutdown()`：
+     - `@PreDestroy`
+     - `DisposableBean#destroy()`
+     - `destroy-method` 配置的方法。
+
+## 7. ApplicationContext 和 BeanFactory 的区别
+
+### 共同点
+
+- **都是 Spring 容器**，可以管理 Bean 的生命周期。
+- **都能实现 IoC（控制反转）**，进行依赖注入。
+
+### 区别
+
+| **对比项**        | **ApplicationContext**                                    | **BeanFactory**                                        |
+| ----------------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| **定义**          | **高级容器**，扩展了 `BeanFactory`，提供了更多功能。      | **基础容器**，是 Spring IoC 容器的最底层实现。         |
+| **Bean 预初始化** | **默认** **预加载单例 Bean**，启动时就创建所有单例 Bean。 | **懒加载**，默认在 `getBean()` 时才创建 Bean。         |
+| **支持 AOP**      | **直接支持 AOP**，如 `@Transactional`                     | **不直接支持 AOP**，需要手动添加 `BeanPostProcessor`。 |
+| **事件监听**      | 支持 **事件发布和监听机制**（`ApplicationListener`）。    | 不支持。                                               |
+| **国际化支持**    | 内置 **`MessageSource`**，支持多语言。                    | 不支持国际化。                                         |
+| **使用场景**      | 一般用在 **Spring Boot / Spring MVC**。                   | 适合 **轻量级容器或测试环境**。                        |
+
+## 8. AOP（面向切面编程）详解
+
+### 8.1 什么是 AOP？
+
+AOP（Aspect-Oriented Programming，**面向切面编程**）是一种 **增强代码** 的技术，它可以**不改变原代码**，动态添加功能（如日志、事务管理、权限控制）。
+
+### 8.2 AOP 的核心概念
+
+| **术语**                | **作用**                                         |
+| ----------------------- | ------------------------------------------------ |
+| **Aspect（切面）**      | 具体增强的功能，如日志、事务管理。               |
+| **JoinPoint（连接点）** | 目标方法执行的具体位置（方法调用、构造方法等）。 |
+| **Pointcut（切点）**    | 定义在哪些方法上应用 AOP。                       |
+| **Advice（通知）**      | 具体的增强逻辑，如 `@Before`、`@After`。         |
+| **Weaving（织入）**     | 把切面逻辑动态应用到目标方法上的过程。           |
+
+### 8.3 Spring AOP 的通知类型
+
+| **通知类型**                   | **注解**                                   | **作用**                       |
+| ------------------------------ | ------------------------------------------ | ------------------------------ |
+| **前置通知（Before）**         | `@Before("execution(切点表达式)")`         | 方法执行前增强                 |
+| **后置通知（After）**          | `@After("execution(切点表达式)")`          | 方法执行后增强                 |
+| **返回通知（AfterReturning）** | `@AfterReturning("execution(切点表达式)")` | 方法成功返回后增强             |
+| **异常通知（AfterThrowing）**  | `@AfterThrowing("execution(切点表达式)")`  | 方法抛出异常后增强             |
+| **环绕通知（Around）**         | `@Around("execution(切点表达式)")`         | 包裹整个方法，可以控制方法执行 |
+
+### 8.4 AOP 示例
+
+**定义切面**
+
+```java
+@Aspect
+@Component
+public class LogAspect {
+
+    @Pointcut("execution(* com.example.service.*.*(..))")
+    public void logPointCut() {}
+
+    @Before("logPointCut()")
+    public void beforeAdvice() {
+        System.out.println("方法执行前");
+    }
+
+    @After("logPointCut()")
+    public void afterAdvice() {
+        System.out.println("方法执行后");
+    }
+
+    @AfterReturning("logPointCut()")
+    public void afterReturningAdvice() {
+        System.out.println("方法返回值后");
+    }
+
+    @Around("logPointCut()")
+    public Object aroundAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
+        System.out.println("方法执行前（环绕通知）");
+        Object result = joinPoint.proceed();
+        System.out.println("方法执行后（环绕通知）");
+        return result;
+    }
+}
+```
+
+**配置 AOP（Spring Boot 自动生效）**
+
+```java
+@Configuration
+@EnableAspectJAutoProxy
+public class AopConfig {
+}
+```
+
+### 8.5 AOP 代理模式
+
+Spring AOP 主要使用 **动态代理** 来增强目标对象：
+
+| **代理模式**     | **适用场景**            | **底层实现**                      |
+| ---------------- | ----------------------- | --------------------------------- |
+| **JDK 动态代理** | 目标对象 **实现了接口** | `java.lang.reflect.Proxy`         |
+| **CGLIB 代理**   | 目标对象 **没有接口**   | 继承目标类，使用 **ASM** 生成子类 |
+
+> **注意：Spring Boot 2.0 以后，默认使用 CGLIB 代理**（即使有接口）。
+
+### 8.6 注解如何与 AOP 切面配合
+
+在 Spring AOP 中，可以通过 **自定义注解** 结合 **切面（Aspect）**，实现更加灵活的切面编程（如日志、权限校验、事务管理等）。
+
+#### **主要步骤**
+
+1. **定义自定义注解**（用于标记哪些方法需要 AOP 增强）。
+2. **定义 AOP 切面**（拦截带有该注解的方法，实现增强逻辑）。
+3. **应用注解到目标方法**（业务方法上加上自定义注解）。
+4. **Spring Boot 自动扫描，切面生效**。
+
+#### 代码示例
+
+##### 1 .定义自定义注解
+
+```java
+@Retention(RetentionPolicy.RUNTIME)  // 运行时生效
+@Target(ElementType.METHOD)  // 作用于方法
+public @interface LogExecutionTime {
+}
+```
+
+📌 **解释：**
+
+- `@Retention(RetentionPolicy.RUNTIME)`：让注解在 **运行时可用**，AOP 需要反射解析它。
+- `@Target(ElementType.METHOD)`：只作用在 **方法** 上。
+
+------
+
+##### 2.定义 AOP 切面
+
+```java
+@Aspect
+@Component
+public class LogAspect {
+
+    @Around("@annotation(com.example.annotation.LogExecutionTime)")  // 拦截标注了 @LogExecutionTime 的方法
+    public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+        long start = System.currentTimeMillis();
+        
+        Object result = joinPoint.proceed();  // 执行目标方法
+        
+        long end = System.currentTimeMillis();
+        System.out.println(joinPoint.getSignature() + " 方法执行耗时: " + (end - start) + "ms");
+        
+        return result;
+    }
+}
+```
+
+📌 **解释：**
+
+- `@Around("@annotation(全路径注解名)")`：拦截 **带有 `@LogExecutionTime` 注解的方法**。
+- `joinPoint.proceed()`：执行目标方法。
+- 记录方法执行时间，**增强业务逻辑**。
+
+##### 3 .应用自定义注解
+
+```java
+@Service
+public class UserService {
+
+    @LogExecutionTime  // 这个方法会被 AOP 代理
+    public void process() {
+        System.out.println("正在执行 UserService.process() 方法...");
+        try {
+            Thread.sleep(1000);  // 模拟耗时操作
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+##### 4 .启用 AOP（Spring Boot 自动生效）
+
+Spring Boot 默认开启 AOP，如果手动配置：
+
+```java
+@Configuration
+@EnableAspectJAutoProxy  // 开启 AOP 代理
+public class AopConfig {
+}
+```
+
+#### 总结
+
+✅ **AOP + 自定义注解** 实现了 **无侵入式增强**：
+
+- 业务代码 **不需要修改**，只需加注解。
+- 适用于 **日志、权限、事务、监控** 等场景。
+- Spring AOP **默认使用 CGLIB 代理**（非接口类），但 **JDK 代理（基于接口）** 也可用。
+
+🚀 **如果你要在 Spring Boot 项目中用 AOP，强烈建议结合自定义注解，这样切面逻辑清晰，代码可维护性高！**
