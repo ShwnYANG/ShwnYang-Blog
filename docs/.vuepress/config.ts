@@ -14,7 +14,7 @@ const WEB_SITE = `https://${DOMAIN_NAME}` // 网址
 
 export default defineConfig4CustomTheme<VdoingThemeConfig>({
   theme: 'vdoing', // 使用npm主题包
-  
+
 
 
   locales: {
@@ -46,14 +46,15 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     // 导航配置
     nav: [
       { text: '首页', link: '/' },
-      { text: '后端开发', link: '/java/'},
-      { text: '密码学',link: '/crypto/'},
-      { text: '机器学习',link: '/ml/'},
-      { text: '命令手册',link: '/cmd/'},
+      { text: '后端开发', link: '/java/' },
+      { text: '密码学', link: '/crypto/' },
+      { text: '机器学习', link: '/ml/' },
+      { text: '命令手册', link: '/cmd/' },
       { text: '关于', link: '/about/' },
-      { text: '友链', link: '/friends/' },
-      { text: '索引', link: '/archives/',
-        items:[
+      //{ text: '友链', link: '/friends/' },
+      {
+        text: '索引', link: '/archives/',
+        items: [
           { text: '分类', link: '/categories/' },
           { text: '标签', link: '/tags/' },
           { text: '归档', link: '/archives/' },
@@ -106,7 +107,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     // defaultMode: 'auto',
 
     // 侧边栏  'structuring' | { mode: 'structuring', collapsable: Boolean} | 'auto' | <自定义>    温馨提示：目录页数据依赖于结构化的侧边栏数据，如果你不设置为'structuring',将无法使用目录页
-    sidebar: { mode: 'structuring', collapsable: false},
+    sidebar: { mode: 'structuring', collapsable: false },
 
     // 文章默认的作者信息，(可在md文件中单独配置此信息) string | {name: string, link?: string}
     author: {
@@ -176,7 +177,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     ['meta', { name: 'baidu-site-verification', content: '7F55weZDDc' }], // 百度统计的站长验证（你可以去掉）
     ['meta', { name: 'theme-color', content: '#11a8cd' }], // 移动浏览器主题颜色
     ['meta', { name: 'referrer', content: 'no-referrer-when-downgrade' }],
-    
+
 
     // [
     //   'script',
@@ -221,10 +222,10 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     'cursor-effects', // 光标点击特效
     'reading-progress', // 阅读进度条
     [
-    	{
-        	name: 'custom-plugins',
-        	globalUIComponents: ["PageInfo"] // 2.x 版本 globalUIComponents 改名为 clientAppRootComponentFiles
-    	}
+      {
+        name: 'custom-plugins',
+        globalUIComponents: ["PageInfo"] // 2.x 版本 globalUIComponents 改名为 clientAppRootComponentFiles
+      }
     ],
     [
       "sitemap", // 网站地图
@@ -345,11 +346,11 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
       md.use(markdownItMathjax3, { tex: { tags: 'ams' } });
       md.use(markdownItFootnote);
     },
-    
-    
+
+
   },
-  
-  
+
+
 
   // 监听文件变化并重新构建
   extraWatchFiles: [
