@@ -47,6 +47,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     nav: [
       { text: '首页', link: '/' },
       { text: '后端开发', link: '/java/' },
+      { text: 'Android开发', link: '/android/' },
       { text: '密码学', link: '/crypto/' },
       { text: '机器学习', link: '/ml/' },
       { text: '命令手册', link: '/cmd/' },
@@ -171,7 +172,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
       'meta',
       {
         name: 'keywords',
-        content: '个人技术博客,后端开发,机器学习,联邦学习,密码学,隐私计算',
+        content: '个人技术博客,后端开发,Android开发,机器学习,联邦学习,密码学,隐私计算',
       },
     ],
     ['meta', { name: 'baidu-site-verification', content: '7F55weZDDc' }], // 百度统计的站长验证（你可以去掉）

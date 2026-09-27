@@ -12,6 +12,7 @@
 当前主要内容包括：
 
 - **后端开发**：Java、Spring Boot / Spring Cloud、中间件、源码阅读
+- **Android 开发**：应用开发与 Framework
 - **密码学与安全**：现代密码学、同态加密、隐私计算
 - **机器学习**：传统机器学习与联邦学习笔记
 - **命令手册**：Git、Linux、Docker、Shell 等常用命令整理
