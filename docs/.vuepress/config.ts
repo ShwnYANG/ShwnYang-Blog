@@ -64,7 +64,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     ],
     sidebarDepth: 2, // 侧边栏显示深度，默认1，最大2（显示到h3标题）
     logo: '/img/logo.png', // 导航栏logo
-    repo: 'OkayYang/my-blog-theme', // 导航栏右侧生成Github链接
+    repo: 'ShwnYANG/ShwnYANG-Blog', // 导航栏右侧生成Github链接
     searchMaxSuggestions: 10, // 搜索结果显示最大数
     lastUpdated: '上次更新', // 开启更新时间，并配置前缀文字   string | boolean (取值为git提交时间)
     docsDir: 'docs', // 编辑的文件夹
@@ -112,7 +112,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     // 文章默认的作者信息，(可在md文件中单独配置此信息) string | {name: string, link?: string}
     author: {
       name: 'xiaoyang', // 必需
-      link: 'https://github.com/OkayYang', // 可选的
+      link: 'https://github.com/ShwnYANG', // 可选的
     },
 
     // 博主信息 (显示在首页侧边栏)
@@ -134,7 +134,7 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
         {
           iconClass: 'icon-github',
           title: 'GitHub',
-          link: 'https://github.com/OKayYang',
+          link: 'https://github.com/ShwnYANG',
         },
         {
           iconClass: 'icon-erji',
@@ -148,14 +148,14 @@ export default defineConfig4CustomTheme<VdoingThemeConfig>({
     footer: {
       createYear: 2023, // 博客创建年份
       copyrightInfo:
-        'xiaoyang | <a href="https://github.com/OkayYang/my-blog-theme/main/LICENSE" target="_blank">MIT License</a>', // 博客版权信息、备案信息等，支持a标签或换行标签</br>
+        'xiaoyang | <a href="https://github.com/ShwnYANG/ShwnYANG-Blog/blob/main/LICENSE" target="_blank">MIT License</a>', // 博客版权信息、备案信息等，支持a标签或换行标签</br>
     },
 
     // 扩展自动生成frontmatter。（当md文件的frontmatter不存在相应的字段时将自动添加。不会覆盖已有的数据。）
     extendFrontmatter: {
       author: {
         name: 'xiaoyang',
-        link: 'https://github.com/OkayYang'
+        link: 'https://github.com/ShwnYANG'
       }
     },
 
