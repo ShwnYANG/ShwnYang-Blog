@@ -9,7 +9,7 @@ if (isWin) {
 
   const warnFn = (type) => {
     console.log(fRed,
-      `\n[vdoing] 提示：由于您使用的是 windows 系统，请使用 ${type}:win 运行，否则运行失败。 \n`
+      `\n[vitepress] 提示：由于您使用的是 Windows 系统，请使用 ${type}:win 运行。\n`
     )
     process.exit(1)
   }

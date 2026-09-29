@@ -21,12 +21,7 @@
 
 ## 主题
 
-本站基于 VuePress 1.x，使用开源主题 [vuepress-theme-vdoing](https://github.com/xugaoyi/vuepress-theme-vdoing)（MIT License）。
-
-Vdoing 面向知识管理与博客场景，适合用 Markdown 维护结构化文档，同时保留碎片化随笔。
-
-[![GitHub stars](https://img.shields.io/github/stars/xugaoyi/vuepress-theme-vdoing?style=flat-square)](https://github.com/xugaoyi/vuepress-theme-vdoing)
-[![GitHub forks](https://img.shields.io/github/forks/xugaoyi/vuepress-theme-vdoing?style=flat-square)](https://github.com/xugaoyi/vuepress-theme-vdoing)
+本站基于 [VitePress](https://github.com/vuejs/vitepress) 构建，使用 Vue 3 编写自定义主题组件。站点配置位于 `docs/.vitepress/`，内容以 Markdown 编写在 `docs/` 目录中。
 
 ## 本地运行
 
@@ -43,6 +38,26 @@ yarn build
 
 站点部署在 Vercel。文档源文件位于 `docs/`。
 
+## Fork 配置
+
+Fork 后只需要修改 [`docs/.vitepress/site.config.ts`](docs/.vitepress/site.config.ts)，即可更新站点名称、作者头像、昵称、简介、建站日期和 GitHub/Email 链接。头像文件放在 `docs/public/img/`，然后将 `author.avatar` 改为对应的 `/img/文件名` 路径。
+
+新增栏目时，在 `sections` 中增加一项，并准备对应的文章目录和目录页：
+
+```ts
+{
+  id: 'go',
+  link: '/go/',
+  navTitle: 'Go开发',
+  title: 'Go 服务端开发',
+  description: 'Go 语言与云原生实践笔记。',
+  icon: '/img/go.png',
+  accent: '#14b8a6'
+}
+```
+
+然后新建一个目录页（例如 `docs/00.目录页/06.Go.md`），内容写入 `<Catalogue track="go" />`，再创建 `docs/07.Go开发/` 放入文章。系统会自动生成导航项、栏目侧边栏、首页栏目卡片、文章统计和文章列表中的栏目标签，并扫描该目录下的所有子目录和文章。
+
 ## 许可证
 
-仓库代码遵循 MIT License。主题版权归 [Evan Xu](https://github.com/xugaoyi/vuepress-theme-vdoing) 所有。
+仓库代码遵循 MIT License。

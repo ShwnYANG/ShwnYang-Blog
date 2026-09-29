@@ -1,6 +1,8 @@
 ---
-categoriesPage: true
-title: 分类
+layout: page
+sidebar: false
+title: 文章分类
 permalink: /categories/
-article: false
 ---
+
+<Categories />

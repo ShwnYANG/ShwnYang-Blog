@@ -15,7 +15,11 @@ pnpm-lock.yaml
 # github action
 .github
 
-# vuepress
+# vitepress
+docs/.vitepress/dist
+docs/.vitepress/cache
+
+# legacy build output (the source configuration has been removed)
 docs/.vuepress/dist
 
 # 百度链接推送
