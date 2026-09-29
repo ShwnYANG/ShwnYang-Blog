@@ -33,7 +33,7 @@ const BUSUANZI_IDS = ['busuanzi_value_site_pv', 'busuanzi_value_site_uv', 'busua
 
 declare global {
   interface Window {
-    busuanzi?: { fetch?: () => void }
+    bszCaller?: { fetch?: (...args: unknown[]) => void }
   }
 }
 
@@ -47,14 +47,13 @@ function markBusuanziUnavailable() {
 function loadBusuanzi(sourceIndex = 0) {
   const existing = document.getElementById(BUSUANZI_SCRIPT_ID) as HTMLScriptElement | null
   if (existing) {
-    window.busuanzi?.fetch?.()
     return
   }
   const script = document.createElement('script')
   script.id = BUSUANZI_SCRIPT_ID
   script.async = true
   script.src = BUSUANZI_SCRIPT_SOURCES[sourceIndex]
-  script.onload = () => window.busuanzi?.fetch?.()
+  script.onload = () => undefined
   script.onerror = () => {
     script.remove()
     if (sourceIndex + 1 < BUSUANZI_SCRIPT_SOURCES.length) loadBusuanzi(sourceIndex + 1)
@@ -62,7 +61,7 @@ function loadBusuanzi(sourceIndex = 0) {
   }
   document.head.appendChild(script)
   window.setTimeout(() => {
-    if (!window.busuanzi && document.getElementById(BUSUANZI_SCRIPT_ID) === script) {
+    if (!window.bszCaller && document.getElementById(BUSUANZI_SCRIPT_ID) === script) {
       script.remove()
       if (sourceIndex + 1 < BUSUANZI_SCRIPT_SOURCES.length) loadBusuanzi(sourceIndex + 1)
       else markBusuanziUnavailable()
@@ -111,7 +110,6 @@ export default {
       () => route.path,
       () => nextTick(() => {
         initZoom()
-        window.busuanzi?.fetch?.()
       })
     )
   }
