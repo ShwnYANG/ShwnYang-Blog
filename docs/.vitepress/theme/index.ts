@@ -23,6 +23,41 @@ import BackToTop from './components/BackToTop.vue'
 
 import './styles/custom.css'
 
+const BUSUANZI_SCRIPT_ID = 'busuanzi-script'
+const BUSUANZI_SCRIPT_SRC = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
+const BUSUANZI_IDS = ['busuanzi_value_site_pv', 'busuanzi_value_site_uv', 'busuanzi_value_page_pv']
+
+declare global {
+  interface Window {
+    busuanzi?: { fetch?: () => void }
+  }
+}
+
+function markBusuanziUnavailable() {
+  BUSUANZI_IDS.forEach((id) => {
+    const element = document.getElementById(id)
+    if (element && element.textContent === '加载中') element.textContent = '暂不可用'
+  })
+}
+
+function loadBusuanzi() {
+  const existing = document.getElementById(BUSUANZI_SCRIPT_ID) as HTMLScriptElement | null
+  if (existing) {
+    window.busuanzi?.fetch?.()
+    return
+  }
+  const script = document.createElement('script')
+  script.id = BUSUANZI_SCRIPT_ID
+  script.async = true
+  script.src = BUSUANZI_SCRIPT_SRC
+  script.onload = () => window.busuanzi?.fetch?.()
+  script.onerror = markBusuanziUnavailable
+  document.head.appendChild(script)
+  window.setTimeout(() => {
+    if (!window.busuanzi) markBusuanziUnavailable()
+  }, 8000)
+}
+
 export default {
   extends: DefaultTheme,
   Layout: () => {
@@ -58,10 +93,14 @@ export default {
     }
     onMounted(() => {
       initZoom()
+      loadBusuanzi()
     })
     watch(
       () => route.path,
-      () => nextTick(() => initZoom())
+      () => nextTick(() => {
+        initZoom()
+        window.busuanzi?.fetch?.()
+      })
     )
   }
 } satisfies Theme

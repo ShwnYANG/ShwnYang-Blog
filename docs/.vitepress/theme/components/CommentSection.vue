@@ -3,7 +3,9 @@ import { onMounted, ref } from 'vue'
 import { useData } from 'vitepress'
 
 const { frontmatter, page } = useData()
-const enabled = Boolean(import.meta.env.VITE_VALINE_APP_ID && import.meta.env.VITE_VALINE_APP_KEY)
+const appId = import.meta.env.VALINE_APP_ID || import.meta.env.VITE_VALINE_APP_ID
+const appKey = import.meta.env.VALINE_APP_KEY || import.meta.env.VITE_VALINE_APP_KEY
+const enabled = Boolean(appId && appKey)
 const loaded = ref(false)
 const isArticle = frontmatter.value.article !== false && !frontmatter.value.home && page.value.relativePath !== 'index.md'
 
@@ -16,8 +18,8 @@ onMounted(() => {
     // @ts-expect-error Valine is provided by the CDN script.
     new window.Valine({
       el: '#valine-comment',
-      appId: import.meta.env.VITE_VALINE_APP_ID,
-      appKey: import.meta.env.VITE_VALINE_APP_KEY,
+      appId,
+      appKey,
       path: window.location.pathname,
       placeholder: '欢迎留下你的想法。',
       avatar: 'monsterid',
@@ -37,7 +39,7 @@ onMounted(() => {
   <section v-if="isArticle" class="comment-section">
     <div class="comment-heading"><span class="kicker">DISCUSSION</span><h2>评论区</h2><p>欢迎分享你的思考、补充或问题。</p></div>
     <div v-if="enabled" id="valine-comment" class="valine-box"></div>
-    <div v-else class="comment-placeholder">评论服务尚未配置。请在 Vercel 环境变量中设置 <code>VITE_VALINE_APP_ID</code> 和 <code>VITE_VALINE_APP_KEY</code>。</div>
+    <div v-else class="comment-placeholder">评论服务尚未配置。请在 Vercel 环境变量中设置 <code>VALINE_APP_ID</code> 和 <code>VALINE_APP_KEY</code>。</div>
   </section>
 </template>
 

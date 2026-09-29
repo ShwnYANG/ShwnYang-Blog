@@ -55,6 +55,15 @@ export default defineConfig({
 
   rewrites: getRewrites(),
 
+  vite: {
+    // Allow Valine variables without requiring a VITE_ prefix.
+    envPrefix: ['VITE_', 'VALINE_'],
+    define: {
+      'import.meta.env.VALINE_APP_ID': JSON.stringify(process.env.VALINE_APP_ID || process.env.VITE_VALINE_APP_ID || ''),
+      'import.meta.env.VALINE_APP_KEY': JSON.stringify(process.env.VALINE_APP_KEY || process.env.VITE_VALINE_APP_KEY || '')
+    }
+  },
+
   markdown: {
     lineNumbers: true,
     math: true
