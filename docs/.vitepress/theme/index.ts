@@ -23,6 +23,29 @@ import BackToTop from './components/BackToTop.vue'
 
 import './styles/custom.css'
 
+declare global {
+  interface Window {
+    bszCaller?: {
+      fetch?: (url: string, callback: (data: Record<string, string>) => void) => void
+    }
+    bszTag?: {
+      texts?: (data: Record<string, string>) => void
+      shows?: () => void
+    }
+  }
+}
+
+function refreshBusuanzi() {
+  if (!window.bszCaller?.fetch || !window.bszTag?.texts) return
+  window.bszCaller.fetch(
+    'https://counter.busuanzi.icodeq.com/?jsonpCallback=BusuanziCallback',
+    (data) => {
+      window.bszTag?.texts?.(data)
+      window.bszTag?.shows?.()
+    }
+  )
+}
+
 export default {
   extends: DefaultTheme,
   Layout: () => {
@@ -63,6 +86,7 @@ export default {
       () => route.path,
       () => nextTick(() => {
         initZoom()
+        refreshBusuanzi()
       })
     )
   }
