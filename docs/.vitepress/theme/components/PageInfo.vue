@@ -36,7 +36,7 @@ function normalize(value: unknown): string[] {
       <span v-if="date" class="page-info-item">发布于 {{ date }}</span>
       <span v-if="post?.words" class="page-info-item">{{ post.words.toLocaleString() }} 字</span>
       <span v-if="post?.readingTime" class="page-info-item">阅读约 {{ post.readingTime }} 分钟</span>
-      <span class="page-info-item page-view-item"><span>浏览</span><span id="busuanzi_value_page_pv">加载中</span></span>
+      <span id="busuanzi_container_page_pv" class="page-info-item page-view-item"><span>浏览</span><span id="busuanzi_value_page_pv">加载中</span></span>
     </div>
     <div v-if="categories.length || tags.length" class="page-info-labels">
       <a v-for="item in categories" :key="`category-${item}`" :href="`/categories/?category=${encodeURIComponent(item)}`" class="category-label">{{ item }}</a>

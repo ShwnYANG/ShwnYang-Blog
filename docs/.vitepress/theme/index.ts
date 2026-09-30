@@ -23,52 +23,6 @@ import BackToTop from './components/BackToTop.vue'
 
 import './styles/custom.css'
 
-const BUSUANZI_SCRIPT_ID = 'busuanzi-script'
-// Try the mirror first, then the original host for networks where either one is unavailable.
-const BUSUANZI_SCRIPT_SOURCES = [
-  'https://busuanzi.icodeq.com/busuanzi/2.3/busuanzi.pure.mini.js',
-  'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
-]
-const BUSUANZI_IDS = ['busuanzi_value_site_pv', 'busuanzi_value_site_uv', 'busuanzi_value_page_pv']
-
-declare global {
-  interface Window {
-    bszCaller?: { fetch?: (...args: unknown[]) => void }
-  }
-}
-
-function markBusuanziUnavailable() {
-  BUSUANZI_IDS.forEach((id) => {
-    const element = document.getElementById(id)
-    if (element && element.textContent === '加载中') element.textContent = '暂不可用'
-  })
-}
-
-function loadBusuanzi(sourceIndex = 0) {
-  const existing = document.getElementById(BUSUANZI_SCRIPT_ID) as HTMLScriptElement | null
-  if (existing) {
-    return
-  }
-  const script = document.createElement('script')
-  script.id = BUSUANZI_SCRIPT_ID
-  script.async = true
-  script.src = BUSUANZI_SCRIPT_SOURCES[sourceIndex]
-  script.onload = () => undefined
-  script.onerror = () => {
-    script.remove()
-    if (sourceIndex + 1 < BUSUANZI_SCRIPT_SOURCES.length) loadBusuanzi(sourceIndex + 1)
-    else markBusuanziUnavailable()
-  }
-  document.head.appendChild(script)
-  window.setTimeout(() => {
-    if (!window.bszCaller && document.getElementById(BUSUANZI_SCRIPT_ID) === script) {
-      script.remove()
-      if (sourceIndex + 1 < BUSUANZI_SCRIPT_SOURCES.length) loadBusuanzi(sourceIndex + 1)
-      else markBusuanziUnavailable()
-    }
-  }, 8000)
-}
-
 export default {
   extends: DefaultTheme,
   Layout: () => {
@@ -104,7 +58,6 @@ export default {
     }
     onMounted(() => {
       initZoom()
-      loadBusuanzi()
     })
     watch(
       () => route.path,
