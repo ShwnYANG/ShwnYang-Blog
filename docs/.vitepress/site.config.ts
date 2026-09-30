@@ -6,7 +6,7 @@ export const siteConfig = {
   description: '后端架构 · Android系统与应用 · 机器学习 · 隐私计算密码学',
   author: {
     name: 'xiaoyang',
-    avatar: '/img/avator.jpg',
+    avatar: '/img/avator.png',
     role: 'Backend engineer · curious builder',
     motto: '尽人事，听天命',
     bio: '用代码搭建自己的认知地图。'
