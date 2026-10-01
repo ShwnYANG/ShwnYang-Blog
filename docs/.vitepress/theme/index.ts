@@ -25,25 +25,37 @@ import './styles/custom.css'
 
 declare global {
   interface Window {
-    bszCaller?: {
-      fetch?: (url: string, callback: (data: Record<string, string>) => void) => void
-    }
-    bszTag?: {
-      texts?: (data: Record<string, string>) => void
-      shows?: () => void
-    }
+    [key: string]: unknown
   }
 }
 
+let busuanziRequestId = 0
+
 function refreshBusuanzi() {
-  if (!window.bszCaller?.fetch || !window.bszTag?.texts) return
-  window.bszCaller.fetch(
-    'https://counter.busuanzi.icodeq.com/?jsonpCallback=BusuanziCallback',
-    (data) => {
-      window.bszTag?.texts?.(data)
-      window.bszTag?.shows?.()
+  const callbackName = `__busuanziCallback${++busuanziRequestId}`
+  const script = document.createElement('script')
+  const callback = (data: Record<string, string | number>) => {
+    const values: Record<string, string | number> = {
+      site_pv: data.site_pv,
+      site_uv: data.site_uv,
+      page_pv: data.page_pv
     }
-  )
+    Object.entries(values).forEach(([key, value]) => {
+      const element = document.getElementById(`busuanzi_value_${key}`)
+      if (element && value !== undefined) element.textContent = String(value)
+    })
+    cleanup()
+  }
+  const cleanup = () => {
+    delete window[callbackName]
+    script.remove()
+  }
+
+  window[callbackName] = callback
+  script.src = `https://counter.busuanzi.icodeq.com/?jsonpCallback=${callbackName}`
+  script.onerror = cleanup
+  document.head.appendChild(script)
+  window.setTimeout(cleanup, 10000)
 }
 
 export default {
