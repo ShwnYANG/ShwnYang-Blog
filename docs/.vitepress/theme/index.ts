@@ -2,8 +2,7 @@ import { h } from 'vue'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import mediumZoom from 'medium-zoom'
-import { onMounted, watch, nextTick } from 'vue'
-import { useRoute } from 'vitepress'
+import { onMounted } from 'vue'
 
 import HomeBento from './components/HomeBento.vue'
 import HomeRecent from './components/HomeRecent.vue'
@@ -31,7 +30,15 @@ declare global {
 
 let busuanziRequestId = 0
 
-function refreshBusuanzi() {
+function refreshBusuanzi(attempt = 0) {
+  const hasCounter = document.getElementById('busuanzi_value_site_pv')
+    || document.getElementById('busuanzi_value_site_uv')
+    || document.getElementById('busuanzi_value_page_pv')
+  if (!hasCounter) {
+    if (attempt < 10) window.setTimeout(() => refreshBusuanzi(attempt + 1), 50)
+    return
+  }
+
   const callbackName = `__busuanziCallback${++busuanziRequestId}`
   const script = document.createElement('script')
   const callback = (data: Record<string, string | number>) => {
@@ -83,9 +90,13 @@ export default {
     app.component('HomeLayout', HomeLayout)
     app.component('PageInfo', PageInfo)
     app.component('WebInfo', WebInfo)
+    router.onAfterRouteChange = () => {
+      // VitePress replaces the page DOM after navigation; wait until the new
+      // counter nodes exist before requesting the values.
+      if (typeof window !== 'undefined') window.setTimeout(() => refreshBusuanzi(), 0)
+    }
   },
   setup() {
-    const route = useRoute()
     const initZoom = () => {
       mediumZoom('.vp-doc img:not(.no-zoom)', {
         background: 'rgba(0, 0, 0, 0.75)'
@@ -93,13 +104,9 @@ export default {
     }
     onMounted(() => {
       initZoom()
+      // The script in <head> handles the initial page in most browsers, but
+      // explicitly fetch here so the counters also work after hydration.
+      window.setTimeout(() => refreshBusuanzi(), 0)
     })
-    watch(
-      () => route.path,
-      () => nextTick(() => {
-        initZoom()
-        refreshBusuanzi()
-      })
-    )
   }
 } satisfies Theme
