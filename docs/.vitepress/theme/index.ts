@@ -22,47 +22,25 @@ import BackToTop from './components/BackToTop.vue'
 
 import './styles/custom.css'
 
-declare global {
-  interface Window {
-    [key: string]: unknown
-  }
+let sitePv = ''
+let siteUv = ''
+
+function cacheOfficialCounters() {
+  const pv = document.getElementById('busuanzi_value_site_pv')?.textContent?.trim()
+  const uv = document.getElementById('busuanzi_value_site_uv')?.textContent?.trim()
+  if (pv && pv !== '加载中') sitePv = pv
+  if (uv && uv !== '加载中') siteUv = uv
 }
 
-let busuanziRequestId = 0
-
-function refreshBusuanzi(attempt = 0) {
-  const hasCounter = document.getElementById('busuanzi_value_site_pv')
-    || document.getElementById('busuanzi_value_site_uv')
-    || document.getElementById('busuanzi_value_page_pv')
-  if (!hasCounter) {
-    if (attempt < 10) window.setTimeout(() => refreshBusuanzi(attempt + 1), 50)
-    return
+function restoreOfficialCounters() {
+  if (sitePv) {
+    const element = document.getElementById('busuanzi_value_site_pv')
+    if (element) element.textContent = sitePv
   }
-
-  const callbackName = `__busuanziCallback${++busuanziRequestId}`
-  const script = document.createElement('script')
-  const callback = (data: Record<string, string | number>) => {
-    const values: Record<string, string | number> = {
-      site_pv: data.site_pv,
-      site_uv: data.site_uv,
-      page_pv: data.page_pv
-    }
-    Object.entries(values).forEach(([key, value]) => {
-      const element = document.getElementById(`busuanzi_value_${key}`)
-      if (element && value !== undefined) element.textContent = String(value)
-    })
-    cleanup()
+  if (siteUv) {
+    const element = document.getElementById('busuanzi_value_site_uv')
+    if (element) element.textContent = siteUv
   }
-  const cleanup = () => {
-    delete window[callbackName]
-    script.remove()
-  }
-
-  window[callbackName] = callback
-  script.src = `https://counter.busuanzi.icodeq.com/?jsonpCallback=${callbackName}`
-  script.onerror = cleanup
-  document.head.appendChild(script)
-  window.setTimeout(cleanup, 10000)
 }
 
 export default {
@@ -91,9 +69,12 @@ export default {
     app.component('PageInfo', PageInfo)
     app.component('WebInfo', WebInfo)
     router.onAfterRouteChange = () => {
-      // VitePress replaces the page DOM after navigation; wait until the new
-      // counter nodes exist before requesting the values.
-      if (typeof window !== 'undefined') window.setTimeout(() => refreshBusuanzi(), 0)
+      // VitePress replaces the counter nodes during SPA navigation. Reuse the
+      // values populated by the official Busuanzi script; do not issue another request.
+      if (typeof window !== 'undefined') {
+        window.setTimeout(restoreOfficialCounters, 0)
+        window.setTimeout(restoreOfficialCounters, 100)
+      }
     }
   },
   setup() {
@@ -104,9 +85,9 @@ export default {
     }
     onMounted(() => {
       initZoom()
-      // The script in <head> handles the initial page in most browsers, but
-      // explicitly fetch here so the counters also work after hydration.
-      window.setTimeout(() => refreshBusuanzi(), 0)
+      cacheOfficialCounters()
+      const observer = new MutationObserver(cacheOfficialCounters)
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true })
     })
   }
 } satisfies Theme
