@@ -1,25 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vitepress'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { data as postsData } from '../../data/posts.data'
 import PostCard from './PostCard.vue'
 
-const route = useRoute()
-const router = useRouter()
 const categories = postsData.categories
-const selectedCategory = ref(typeof route.query?.category === 'string' ? route.query.category : 'all')
+const selectedCategory = ref('all')
 const pageSize = 8
-const storageKey = 'yang-blog:categories-state'
-const currentPage = ref(Math.max(1, Number(route.query?.page) || 1))
-
-function readStoredState() {
-  if (typeof sessionStorage === 'undefined') return null
-  try { return JSON.parse(sessionStorage.getItem(storageKey) || 'null') as { category?: string; page?: number } | null } catch { return null }
-}
-
-function saveState() {
-  if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(storageKey, JSON.stringify({ category: selectedCategory.value, page: currentPage.value }))
-}
+const currentPage = ref(1)
 
 const activePosts = computed(() => {
   if (selectedCategory.value === 'all') return postsData.posts
@@ -29,30 +16,36 @@ const pageCount = computed(() => Math.max(1, Math.ceil(activePosts.value.length 
 const pagedPosts = computed(() => activePosts.value.slice((currentPage.value - 1) * pageSize, currentPage.value * pageSize))
 const pageItems = computed<(number | 'ellipsis')[]>(() => pageCount.value <= 7 ? Array.from({ length: pageCount.value }, (_, i) => i + 1) : [1, 2, 3, 'ellipsis', pageCount.value - 1, pageCount.value])
 
-watch(() => [route.query?.category, route.query?.page], ([category, page]) => {
-  selectedCategory.value = typeof category === 'string' && categories.some(item => item.name === category) ? category : 'all'
-  currentPage.value = Math.max(1, Number(page) || 1)
-})
+function syncFromUrl() {
+  const params = new URLSearchParams(window.location.search)
+  const category = params.get('category')
+  selectedCategory.value = category && categories.some(item => item.name === category) ? category : 'all'
+  currentPage.value = Math.min(pageCount.value, Math.max(1, Number(params.get('page')) || 1))
+}
+
+function updateUrl() {
+  const url = new URL(window.location.href)
+  if (selectedCategory.value === 'all') url.searchParams.delete('category')
+  else url.searchParams.set('category', selectedCategory.value)
+  if (currentPage.value === 1) url.searchParams.delete('page')
+  else url.searchParams.set('page', String(currentPage.value))
+  window.history.pushState({}, '', url)
+}
 
 onMounted(() => {
-  if (route.query?.category || route.query?.page) return
-  const stored = readStoredState()
-  if (stored?.category || stored?.page) {
-    selectedCategory.value = stored.category && categories.some(category => category.name === stored.category) ? stored.category : 'all'
-    currentPage.value = Math.max(1, Number(stored.page) || 1)
-  }
+  window.addEventListener('popstate', syncFromUrl)
+  syncFromUrl()
 })
+onBeforeUnmount(() => window.removeEventListener('popstate', syncFromUrl))
 
 function selectCategory(name: string) {
   selectedCategory.value = name
   currentPage.value = 1
-  saveState()
-  router.push({ path: route.path, query: name === 'all' ? {} : { category: name } })
+  updateUrl()
 }
 function goToPage(page: number) {
   currentPage.value = page
-  saveState()
-  router.push({ path: route.path, query: { ...(selectedCategory.value === 'all' ? {} : { category: selectedCategory.value }), ...(page > 1 ? { page: String(page) } : {}) } })
+  updateUrl()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>

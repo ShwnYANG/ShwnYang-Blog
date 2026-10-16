@@ -7,6 +7,7 @@
   --vp-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --vp-font-family-mono: 'Fira Code', 'JetBrains Mono', Menlo, Monaco, Consolas, monospace;
+  --vp-sidebar-width: 296px;
 
   --vp-shadow-glow: 0 0 30px rgba(59, 130, 246, 0.15);
   --glass-bg: rgba(255, 255, 255, 0.7);
@@ -62,13 +63,85 @@ body {
   border-bottom: 1px solid var(--vp-c-divider) !important;
 }
 
-/* Sidebar polish */
+/* Article navigation: clear folder levels and a visible current location. */
 .VPSidebar {
   border-right: 1px solid var(--vp-c-divider) !important;
 }
-.VPSidebarItem.is-active > .item > .link {
-  font-weight: 600;
+
+.VPSidebar .VPSidebarItem.level-0 {
+  padding-bottom: 10px;
+}
+
+.VPSidebar .VPSidebarItem.level-0 > .item {
+  align-items: center;
+  min-height: 32px;
+  padding: 3px 0;
+}
+
+.VPSidebar .VPSidebarItem.level-0 > .item > .text {
+  color: var(--vp-c-text-1);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.VPSidebar .VPSidebarItem.level-0.has-active > .item > .text {
+  color: var(--vp-c-brand-1);
+}
+
+.VPSidebar .VPSidebarItem .items {
+  margin: 7px 0 0 11px;
+  padding-left: 12px;
+  border-left: 1px solid color-mix(in srgb, var(--vp-c-brand-1) 30%, var(--vp-c-divider));
+}
+
+.VPSidebar .VPSidebarItem .items > .VPSidebarItem > .item::before {
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  width: 10px;
+  height: 1px;
+  background: color-mix(in srgb, var(--vp-c-brand-1) 30%, var(--vp-c-divider));
+  content: '';
+}
+
+.VPSidebar .VPSidebarItem:not(.level-0) > .item {
+  align-items: center;
+  min-height: 32px;
+  padding: 3px 4px;
+}
+
+.VPSidebar .VPSidebarItem:not(.level-0) > .item .text {
+  padding: 2px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.VPSidebar .VPSidebarItem:not(.level-0):not(.is-link) > .item > .text {
+  color: var(--vp-c-text-1);
+  font-weight: 650;
+}
+
+.VPSidebar .VPSidebarItem:not(.level-0):not(.is-link).has-active > .item > .text {
+  color: var(--vp-c-brand-1);
+}
+
+.VPSidebar .VPSidebarItem.has-active > .item > .caret {
+  color: var(--vp-c-brand-1);
+}
+
+.VPSidebar .VPSidebarItem .items > .VPSidebarItem.is-active > .item::before {
+  height: 2px;
+  background: var(--vp-c-brand-1);
+}
+
+.VPSidebar .VPSidebarItem.is-active > .item > .link > .text {
   color: var(--vp-c-brand-1) !important;
+  font-weight: 700;
+}
+
+.VPSidebar .VPSidebarItem .indicator {
+  display: none;
 }
 
 /* Content blockquote */
@@ -105,26 +178,107 @@ body {
   border-bottom: none;
 }
 
-/* Code blocks */
+/* Code blocks: a compact macOS window frame around Shiki output. */
 .vp-doc div[class*='language-'] {
-  border-radius: 10px;
-  border: 1px solid var(--vp-c-divider);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --code-window-bar: #e9edf3;
+  --code-window-border: #d8dee8;
+  border: 1px solid var(--code-window-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(28, 39, 62, 0.09);
+  overflow: hidden;
 }
 
-/* MathJax inline / block formatting */
-mjx-container {
-  display: inline-block !important;
-  margin: 0 2px;
-  outline: none;
+.dark .vp-doc div[class*='language-'] {
+  --code-window-bar: #1b2230;
+  --code-window-border: #303a4a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
 }
-mjx-container[jax='SVG'][display='true'] {
-  display: block !important;
-  text-align: center;
-  margin: 1.2em 0 !important;
+
+.vp-doc div[class*='language-']::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  height: 37px;
+  border-bottom: 1px solid var(--code-window-border);
+  background: var(--code-window-bar);
+  content: '';
+  pointer-events: none;
+}
+
+.vp-doc div[class*='language-']::before {
+  position: absolute;
+  top: 15px;
+  left: 16px;
+  z-index: 3;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ff5f57;
+  box-shadow: 15px 0 #febc2e, 30px 0 #28c840;
+  content: '';
+  pointer-events: none;
+}
+
+.vp-doc div[class*='language-'] pre {
+  padding-top: 57px;
+}
+
+.vp-doc div[class*='language-'] .line-numbers-wrapper {
+  top: 37px;
+}
+
+.vp-doc div[class*='language-'] > span.lang {
+  top: 9px;
+  right: 48px;
+  z-index: 3;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.vp-doc div[class*='language-'] > button.copy {
+  top: 5px;
+  right: 8px;
+  z-index: 4;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background-size: 16px;
+  opacity: 0.75;
+}
+
+.vp-doc div[class*='language-'] > button.copy:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
+}
+
+.vp-doc div[class*='language-'] > button.copy.copied,
+.vp-doc div[class*='language-'] > button.copy:hover.copied {
+  border-radius: 6px;
+}
+
+.vp-doc div[class*='language-'] > button.copy.copied::before,
+.vp-doc div[class*='language-'] > button.copy:hover.copied::before {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 8px);
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--vp-code-copy-code-hover-border-color);
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+/* Let MathJax keep its own inline baseline; only long display equations scroll. */
+.vp-doc mjx-container[display='true'] {
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 8px 0;
+  padding: 8px 0 12px;
 }
 
 /* Image zoom styling */
@@ -148,25 +302,4 @@ mjx-container[jax='SVG'][display='true'] {
   z-index: 9999;
   transition: width 0.1s ease-out;
   pointer-events: none;
-}
-
-/* Keep the about-page mascot anchored to the viewport instead of the article flow. */
-.vp-doc img.panda {
-  position: fixed;
-  left: 24px;
-  bottom: 18px;
-  z-index: 20;
-  width: 120px;
-  height: auto;
-  margin: 0;
-  opacity: 0.85;
-  pointer-events: none;
-}
-
-@media (max-width: 640px) {
-  .vp-doc img.panda {
-    left: 12px;
-    bottom: 12px;
-    width: 88px;
-  }
 }

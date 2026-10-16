@@ -69,7 +69,7 @@ function buildSidebarForDir(dirPath: string): SidebarItem[] {
       if (children.length > 0) {
         items.push({
           text: cleanTitle(entry.name),
-          collapsed: false,
+          collapsed: true,
           items: children
         })
       }

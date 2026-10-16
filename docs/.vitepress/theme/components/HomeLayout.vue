@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vitepress'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { data as postsData } from '../../data/posts.data'
 import WebInfo from './WebInfo.vue'
 import PostCard from './PostCard.vue'
@@ -11,32 +10,22 @@ const sortedPosts = computed(() => [...postsData.posts].sort((a, b) => {
   if (a.recommend !== b.recommend) return Number(b.recommend) - Number(a.recommend)
   return (b.date || '').localeCompare(a.date || '')
 }))
-const route = useRoute()
-const router = useRouter()
 const pageSize = 8
-const pageStorageKey = 'yang-blog:home-page'
 const pageCount = computed(() => Math.max(1, Math.ceil(sortedPosts.value.length / pageSize)))
 function parsePage(value: unknown) {
   const page = Number(value)
   return Number.isInteger(page) && page > 0 ? Math.min(page, pageCount.value) : 0
 }
-const initialPage = parsePage(route.query?.page)
-const currentPage = ref(initialPage || 1)
-watch(() => route.query?.page, value => {
-  const page = parsePage(value)
-  if (page) {
-    currentPage.value = page
-    return
-  }
-  const stored = parsePage(sessionStorage.getItem(pageStorageKey))
-  currentPage.value = stored || 1
-})
+const currentPage = ref(1)
+function syncPageFromUrl() {
+  const page = parsePage(new URLSearchParams(window.location.search).get('page'))
+  currentPage.value = page || 1
+}
 onMounted(() => {
-  if (!initialPage) {
-    const stored = parsePage(sessionStorage.getItem(pageStorageKey))
-    if (stored) currentPage.value = stored
-  }
+  syncPageFromUrl()
+  window.addEventListener('popstate', syncPageFromUrl)
 })
+onBeforeUnmount(() => window.removeEventListener('popstate', syncPageFromUrl))
 const posts = computed(() => sortedPosts.value.slice((currentPage.value - 1) * pageSize, currentPage.value * pageSize))
 const pageItems = computed<(number | 'ellipsis')[]>(() => {
   const total = pageCount.value
@@ -50,9 +39,10 @@ const categories = computed(() => postsData.categories.slice(0, 10))
 
 function goToPage(page: number) {
   currentPage.value = Math.min(Math.max(page, 1), pageCount.value)
-  if (currentPage.value === 1) sessionStorage.removeItem(pageStorageKey)
-  else sessionStorage.setItem(pageStorageKey, String(currentPage.value))
-  router.push({ path: route.path, query: currentPage.value === 1 ? {} : { page: String(currentPage.value) } })
+  const url = new URL(window.location.href)
+  if (currentPage.value === 1) url.searchParams.delete('page')
+  else url.searchParams.set('page', String(currentPage.value))
+  window.history.pushState({}, '', url)
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>

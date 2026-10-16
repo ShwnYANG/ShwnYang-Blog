@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { gsap } from 'gsap'
 
 const threshold = 100
 const visible = ref(false)
@@ -17,7 +18,21 @@ function updateScrollState() {
 }
 
 function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' })
+}
+
+function enter(element: Element, done: () => void) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return done()
+  gsap.fromTo(element, { opacity: 0, y: 10, scale: 0.85 }, {
+    opacity: 1, y: 0, scale: 1, duration: 0.32, ease: 'back.out(1.8)',
+    onComplete: () => { gsap.set(element, { clearProps: 'opacity,transform' }); done() }
+  })
+}
+
+function leave(element: Element, done: () => void) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return done()
+  gsap.to(element, { opacity: 0, y: 8, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: done })
 }
 
 onMounted(() => {
@@ -33,7 +48,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <Transition name="back-to-top-fade">
+  <Transition :css="false" @enter="enter" @leave="leave">
     <button
       v-if="visible"
       class="back-to-top"
@@ -95,24 +110,11 @@ onBeforeUnmount(() => {
   stroke-width: 2;
 }
 
-.back-to-top-fade-enter-active,
-.back-to-top-fade-leave-active {
-  transition: opacity .2s ease, transform .2s ease;
-}
-
-.back-to-top-fade-enter-from,
-.back-to-top-fade-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
 @media (max-width: 640px) {
   .back-to-top { right: 16px; bottom: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .back-to-top,
-  .back-to-top-fade-enter-active,
-  .back-to-top-fade-leave-active { transition: none; }
+  .back-to-top { transition: none; }
 }
 </style>

@@ -1,8 +1,7 @@
-import { h } from 'vue'
+import { h, nextTick, onMounted } from 'vue'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import mediumZoom from 'medium-zoom'
-import { onMounted } from 'vue'
 
 import HomeBento from './components/HomeBento.vue'
 import HomeRecent from './components/HomeRecent.vue'
@@ -19,28 +18,68 @@ import HomeLayout from './components/HomeLayout.vue'
 import PageInfo from './components/PageInfo.vue'
 import WebInfo from './components/WebInfo.vue'
 import BackToTop from './components/BackToTop.vue'
+import MiniPet from './components/MiniPet.vue'
+import SiteMotion from './components/SiteMotion.vue'
 
 import './styles/custom.css'
 
 let sitePv = ''
 let siteUv = ''
+const pagePv = new Map<string, string>()
+let lastRequestedPath = ''
+let requestId = 0
 
-function cacheOfficialCounters() {
-  const pv = document.getElementById('busuanzi_value_site_pv')?.textContent?.trim()
-  const uv = document.getElementById('busuanzi_value_site_uv')?.textContent?.trim()
-  if (pv && pv !== '加载中') sitePv = pv
-  if (uv && uv !== '加载中') siteUv = uv
+type VisitCounts = { site_pv?: number; site_uv?: number; page_pv?: number }
+
+function showCount(id: string, value: string) {
+  const element = document.getElementById(id)
+  if (element) element.textContent = value
 }
 
-function restoreOfficialCounters() {
-  if (sitePv) {
-    const element = document.getElementById('busuanzi_value_site_pv')
-    if (element) element.textContent = sitePv
+function showCachedCounts(path: string) {
+  if (sitePv) showCount('busuanzi_value_site_pv', sitePv)
+  if (siteUv) showCount('busuanzi_value_site_uv', siteUv)
+  const cachedPagePv = pagePv.get(path)
+  if (cachedPagePv) showCount('busuanzi_value_page_pv', cachedPagePv)
+}
+
+function loadVisitCounts(path: string) {
+  if (lastRequestedPath === path) return
+  lastRequestedPath = path
+  const currentRequestId = ++requestId
+  const callbackName = `BusuanziCallback_${Date.now()}_${currentRequestId}`
+  const callbacks = window as unknown as Record<string, ((counts: VisitCounts) => void) | undefined>
+  const script = document.createElement('script')
+  let settled = false
+
+  const cleanup = () => {
+    if (settled) return false
+    settled = true
+    window.clearTimeout(timeout)
+    script.remove()
+    delete callbacks[callbackName]
+    return true
   }
-  if (siteUv) {
-    const element = document.getElementById('busuanzi_value_site_uv')
-    if (element) element.textContent = siteUv
+
+  callbacks[callbackName] = (counts) => {
+    if (!cleanup()) return
+    if (Number.isFinite(counts.site_pv)) sitePv = String(counts.site_pv)
+    if (Number.isFinite(counts.site_uv)) siteUv = String(counts.site_uv)
+    if (Number.isFinite(counts.page_pv)) pagePv.set(path, String(counts.page_pv))
+    if (window.location.pathname === path && currentRequestId === requestId) showCachedCounts(path)
   }
+
+  const fail = () => {
+    if (!cleanup() || window.location.pathname !== path || currentRequestId !== requestId) return
+    if (!sitePv) showCount('busuanzi_value_site_pv', '--')
+    if (!siteUv) showCount('busuanzi_value_site_uv', '--')
+    if (!pagePv.has(path)) showCount('busuanzi_value_page_pv', '--')
+  }
+  const timeout = window.setTimeout(fail, 10000)
+  script.onerror = fail
+  script.referrerPolicy = 'no-referrer-when-downgrade'
+  script.src = `https://busuanzi.ibruce.info/busuanzi?jsonpCallback=${callbackName}`
+  document.head.appendChild(script)
 }
 
 export default {
@@ -48,7 +87,7 @@ export default {
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
       'layout-top': () => h(ReadingProgress),
-      'layout-bottom': () => h(BackToTop),
+      'layout-bottom': () => [h(BackToTop), h(MiniPet), h(SiteMotion)],
       'doc-before': () => h(PageInfo),
       'doc-after': () => h(CommentSection)
     })
@@ -68,13 +107,12 @@ export default {
     app.component('HomeLayout', HomeLayout)
     app.component('PageInfo', PageInfo)
     app.component('WebInfo', WebInfo)
-    router.onAfterRouteChange = () => {
-      // VitePress replaces the counter nodes during SPA navigation. Reuse the
-      // values populated by the official Busuanzi script; do not issue another request.
-      if (typeof window !== 'undefined') {
-        window.setTimeout(restoreOfficialCounters, 0)
-        window.setTimeout(restoreOfficialCounters, 100)
-      }
+    router.onAfterRouteChange = async () => {
+      if (typeof window === 'undefined') return
+      await nextTick()
+      const path = window.location.pathname
+      showCachedCounts(path)
+      loadVisitCounts(path)
     }
   },
   setup() {
@@ -85,9 +123,9 @@ export default {
     }
     onMounted(() => {
       initZoom()
-      cacheOfficialCounters()
-      const observer = new MutationObserver(cacheOfficialCounters)
-      observer.observe(document.body, { childList: true, subtree: true, characterData: true })
+      const path = window.location.pathname
+      showCachedCounts(path)
+      loadVisitCounts(path)
     })
   }
 } satisfies Theme

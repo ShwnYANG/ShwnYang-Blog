@@ -1,26 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vitepress'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { data as postsData } from '../../data/posts.data'
 import PostCard from './PostCard.vue'
 
-const route = useRoute()
-const router = useRouter()
 const tags = postsData.tags
-const selectedTag = ref(typeof route.query?.tag === 'string' ? route.query.tag : 'all')
+const selectedTag = ref('all')
 const pageSize = 8
-const storageKey = 'yang-blog:tags-state'
-const currentPage = ref(Math.max(1, Number(route.query?.page) || 1))
+const currentPage = ref(1)
 const tagColors = ['#0f766e', '#b45309', '#2563eb', '#be185d', '#6d28d9', '#047857', '#c2410c']
-
-function readStoredState() {
-  if (typeof sessionStorage === 'undefined') return null
-  try { return JSON.parse(sessionStorage.getItem(storageKey) || 'null') as { tag?: string; page?: number } | null } catch { return null }
-}
-
-function saveState() {
-  if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(storageKey, JSON.stringify({ tag: selectedTag.value, page: currentPage.value }))
-}
 
 const activePosts = computed(() => {
   if (selectedTag.value === 'all') return postsData.posts
@@ -30,30 +17,36 @@ const pageCount = computed(() => Math.max(1, Math.ceil(activePosts.value.length 
 const pagedPosts = computed(() => activePosts.value.slice((currentPage.value - 1) * pageSize, currentPage.value * pageSize))
 const pageItems = computed<(number | 'ellipsis')[]>(() => pageCount.value <= 7 ? Array.from({ length: pageCount.value }, (_, i) => i + 1) : [1, 2, 3, 'ellipsis', pageCount.value - 1, pageCount.value])
 
-watch(() => [route.query?.tag, route.query?.page], ([tag, page]) => {
-  selectedTag.value = typeof tag === 'string' && tags.some(item => item.name === tag) ? tag : 'all'
-  currentPage.value = Math.max(1, Number(page) || 1)
-})
+function syncFromUrl() {
+  const params = new URLSearchParams(window.location.search)
+  const tag = params.get('tag')
+  selectedTag.value = tag && tags.some(item => item.name === tag) ? tag : 'all'
+  currentPage.value = Math.min(pageCount.value, Math.max(1, Number(params.get('page')) || 1))
+}
+
+function updateUrl() {
+  const url = new URL(window.location.href)
+  if (selectedTag.value === 'all') url.searchParams.delete('tag')
+  else url.searchParams.set('tag', selectedTag.value)
+  if (currentPage.value === 1) url.searchParams.delete('page')
+  else url.searchParams.set('page', String(currentPage.value))
+  window.history.pushState({}, '', url)
+}
 
 onMounted(() => {
-  if (route.query?.tag || route.query?.page) return
-  const stored = readStoredState()
-  if (stored?.tag || stored?.page) {
-    selectedTag.value = stored.tag && tags.some(tag => tag.name === stored.tag) ? stored.tag : 'all'
-    currentPage.value = Math.max(1, Number(stored.page) || 1)
-  }
+  window.addEventListener('popstate', syncFromUrl)
+  syncFromUrl()
 })
+onBeforeUnmount(() => window.removeEventListener('popstate', syncFromUrl))
 
 function selectTag(name: string) {
   selectedTag.value = name
   currentPage.value = 1
-  saveState()
-  router.push({ path: route.path, query: name === 'all' ? {} : { tag: name } })
+  updateUrl()
 }
 function goToPage(page: number) {
   currentPage.value = page
-  saveState()
-  router.push({ path: route.path, query: { ...(selectedTag.value === 'all' ? {} : { tag: selectedTag.value }), ...(page > 1 ? { page: String(page) } : {}) } })
+  updateUrl()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>
