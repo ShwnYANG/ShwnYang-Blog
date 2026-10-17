@@ -144,6 +144,87 @@ body {
   display: none;
 }
 
+/* Let readers hide the file tree without changing the mobile menu. */
+.article-sidebar-toggle {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .article-sidebar-toggle {
+    position: fixed;
+    top: calc(var(--vp-layout-top-height, 0px) + var(--vp-nav-height) + 24px);
+    left: calc(var(--vp-sidebar-width) - 1px);
+    z-index: calc(var(--vp-z-index-sidebar) + 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 36px;
+    height: 66px;
+    border: 1px solid var(--vp-c-divider);
+    border-left: 0;
+    border-radius: 0 8px 8px 0;
+    background: var(--vp-c-bg-elv);
+    box-shadow: 2px 3px 12px rgba(0, 0, 0, 0.08);
+    color: var(--vp-c-text-2);
+    font-size: 11px;
+    cursor: pointer;
+    transition: left 0.25s ease, color 0.2s, background-color 0.2s;
+  }
+
+  .article-sidebar-toggle:hover,
+  .article-sidebar-toggle:focus-visible {
+    color: var(--vp-c-brand-1);
+    background: var(--vp-c-brand-soft);
+  }
+
+  .article-sidebar-toggle:focus-visible {
+    outline: 2px solid var(--vp-c-brand-1);
+    outline-offset: 2px;
+  }
+
+  .article-sidebar-toggle .toggle-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .article-sidebar-collapsed .article-sidebar-toggle {
+    left: 0;
+  }
+
+  .article-sidebar-collapsed .article-sidebar-toggle .toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  .article-sidebar-collapsed .Layout .VPSidebar {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-100%);
+  }
+
+  .article-sidebar-collapsed .Layout .VPContent.has-sidebar,
+  .article-sidebar-collapsed .Layout .VPLocalNav.has-sidebar {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .article-sidebar-toggle {
+    left: calc((100vw - (var(--vp-layout-max-width) - 64px)) / 2 + var(--vp-sidebar-width) - 32px);
+  }
+
+  .article-sidebar-collapsed .article-sidebar-toggle {
+    left: 0;
+  }
+
+  .article-sidebar-collapsed .Layout .VPContent.has-sidebar,
+  .article-sidebar-collapsed .Layout .VPLocalNav.has-sidebar {
+    padding-left: calc((100vw - var(--vp-layout-max-width)) / 2);
+  }
+}
+
 /* Content blockquote */
 .vp-doc blockquote {
   border-left: 3px solid var(--vp-c-brand-1);

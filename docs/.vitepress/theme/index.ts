@@ -20,6 +20,7 @@ import WebInfo from './components/WebInfo.vue'
 import BackToTop from './components/BackToTop.vue'
 import MiniPet from './components/MiniPet.vue'
 import SiteMotion from './components/SiteMotion.vue'
+import ArticleSidebarToggle from './components/ArticleSidebarToggle.vue'
 
 import './styles/custom.css'
 
@@ -87,7 +88,7 @@ export default {
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
       'layout-top': () => h(ReadingProgress),
-      'layout-bottom': () => [h(BackToTop), h(MiniPet), h(SiteMotion)],
+      'layout-bottom': () => [h(BackToTop), h(MiniPet), h(SiteMotion), h(ArticleSidebarToggle)],
       'doc-before': () => h(PageInfo),
       'doc-after': () => h(CommentSection)
     })
