@@ -3,6 +3,7 @@
  */
 export const siteConfig = {
   title: "Yang's Blog",
+  url: 'https://blog.ywenrou.cn',
   description: '后端架构 · Android系统与应用 · 机器学习 · 隐私计算密码学',
   author: {
     name: 'xiaoyang',

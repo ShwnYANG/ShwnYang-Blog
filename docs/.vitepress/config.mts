@@ -1,6 +1,11 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import matter from 'gray-matter'
 import { defineConfig } from 'vitepress'
 import { getRewrites, getSidebar } from './routeHelper'
 import { siteConfig } from './site.config'
+
+const isArticlePath = (filePath: string) => /^\d+\./.test(filePath) && !/^(?:00|05)\./.test(filePath)
 
 export default defineConfig({
   title: siteConfig.title,
@@ -8,7 +13,50 @@ export default defineConfig({
   lang: 'zh-CN',
   base: '/',
   cleanUrls: true,
+  lastUpdated: true,
   ignoreDeadLinks: true,
+  sitemap: { hostname: siteConfig.url },
+
+  transformPageData(pageData, { siteConfig: config }) {
+    if (pageData.isNotFound || pageData.frontmatter.description || !isArticlePath(pageData.filePath)) return
+
+    const source = path.join(config.srcDir, pageData.filePath)
+    if (!fs.existsSync(source)) return
+    const { content } = matter(fs.readFileSync(source, 'utf8'))
+    const paragraph = content
+      .replace(/```[\s\S]*?```/g, '')
+      .split(/\n\s*\n/)
+      .map(block => block.replace(/\n/g, ' ').trim())
+      .find(block => block && !/^(?:#|>|-|\*|!|<|\d+\.)/.test(block))
+    if (!paragraph) return
+
+    const description = paragraph
+      .replace(/!?\[([^\]]+)\]\([^)]*\)/g, '$1')
+      .replace(/[`*_~]/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 155)
+    if (description) return { description }
+  },
+
+  transformHead({ page, pageData, title, description }) {
+    if (pageData.isNotFound || page === '404.md') return
+    const route = page.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, '')
+    const canonical = new URL(route || '/', `${siteConfig.url}/`).href
+    const isArticle = isArticlePath(pageData.filePath)
+    const date = pageData.frontmatter.date
+
+    return [
+      ['link', { rel: 'canonical', href: canonical }],
+      ['meta', { property: 'og:type', content: isArticle ? 'article' : 'website' }],
+      ['meta', { property: 'og:site_name', content: siteConfig.title }],
+      ['meta', { property: 'og:title', content: title }],
+      ['meta', { property: 'og:description', content: description }],
+      ['meta', { property: 'og:url', content: canonical }],
+      ...(isArticle && date ? [['meta', { property: 'article:published_time', content: String(date).slice(0, 10) }]] as const : [])
+    ]
+  },
 
   head: [
     ['link', { rel: 'icon', href: '/img/favicon.ico' }],
