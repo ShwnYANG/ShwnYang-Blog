@@ -208,6 +208,20 @@ body {
   .article-sidebar-collapsed .Layout .VPLocalNav.has-sidebar {
     padding-left: 0;
   }
+
+  /* Remove the inner reading-width cap too, so the recovered space is usable. */
+  .article-sidebar-collapsed .Layout .VPDoc.has-sidebar .content-container {
+    max-width: none;
+  }
+
+  .article-sidebar-collapsed .VPDoc .content {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .article-sidebar-collapsed .VPDoc .aside {
+    flex: 0 0 256px;
+  }
 }
 
 @media (min-width: 1440px) {
@@ -221,7 +235,8 @@ body {
 
   .article-sidebar-collapsed .Layout .VPContent.has-sidebar,
   .article-sidebar-collapsed .Layout .VPLocalNav.has-sidebar {
-    padding-left: calc((100vw - var(--vp-layout-max-width)) / 2);
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 

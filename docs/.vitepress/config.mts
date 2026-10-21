@@ -106,6 +106,16 @@ export default defineConfig({
   },
 
   markdown: {
+    config(md) {
+      const fence = md.renderer.rules.fence!
+      md.renderer.rules.fence = (tokens, index, options, env, self) => {
+        const token = tokens[index]
+        if (token.info.trim() === 'mermaid') {
+          return `<MermaidDiagram source="${md.utils.escapeHtml(encodeURIComponent(token.content))}" />\n`
+        }
+        return fence(tokens, index, options, env, self)
+      }
+    },
     lineNumbers: true,
     math: true,
     languageAlias: {

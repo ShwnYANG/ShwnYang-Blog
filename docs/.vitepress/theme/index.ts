@@ -21,6 +21,7 @@ import BackToTop from './components/BackToTop.vue'
 import MiniPet from './components/MiniPet.vue'
 import SiteMotion from './components/SiteMotion.vue'
 import ArticleSidebarToggle from './components/ArticleSidebarToggle.vue'
+import MermaidDiagram from './components/MermaidDiagram.vue'
 
 import './styles/custom.css'
 
@@ -94,6 +95,7 @@ export default {
     })
   },
   enhanceApp({ app, router }) {
+    app.component('MermaidDiagram', MermaidDiagram)
     app.component('HomeBento', HomeBento)
     app.component('HomeRecent', HomeRecent)
     app.component('ArticleMeta', ArticleMeta)
