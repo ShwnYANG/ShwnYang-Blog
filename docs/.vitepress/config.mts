@@ -188,7 +188,7 @@ export default defineConfig({
     },
 
     footer: {
-      message: '基于 VitePress 搭建 · 聚焦技术深度与极致体验',
+      message: '基于 VitePress 搭建',
       copyright: `Copyright © 2023-PRESENT ${siteConfig.author.name} | MIT Licensed`
     }
   }
