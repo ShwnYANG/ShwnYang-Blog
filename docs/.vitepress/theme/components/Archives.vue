@@ -27,7 +27,7 @@ const stats = postsData.stats
             :key="monthGroup.month"
             class="month-block"
           >
-            <div class="month-label">{{ monthGroup.month }} 月</div>
+            <div v-if="monthGroup.month" class="month-label">{{ monthGroup.month }} 月</div>
 
             <div class="posts-list">
               <a

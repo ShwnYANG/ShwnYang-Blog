@@ -2,8 +2,28 @@ import fs from 'node:fs'
 import path from 'node:path'
 import glob from 'fast-glob'
 import matter from 'gray-matter'
+import { execFileSync } from 'node:child_process'
 import { siteConfig } from '../site.config'
 import { getSectionSourceDir } from '../sectionDiscovery'
+
+function publicationDate(value: unknown, file: string): string {
+  if (value) {
+    const parsed = new Date(value as string)
+    if (!isNaN(parsed.getTime())) {
+      // Preserve the author's calendar date regardless of the build machine's timezone.
+      const calendarDate = typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)?.[0]
+      return calendarDate || parsed.toISOString().slice(0, 10)
+    }
+  }
+  try {
+    const dates = execFileSync('git', ['log', '--follow', '--format=%aI', '--diff-filter=A', '--', file], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore']
+    }).trim().split('\n')
+    return dates.at(-1)?.slice(0, 10) || ''
+  } catch {
+    return ''
+  }
+}
 
 export interface Post {
   title: string
@@ -92,17 +112,9 @@ export default {
         link = '/' + rel.replace(/\.md$/, '')
       }
 
-      let dateStr = ''
-      let year = '未知年份'
-      let month = '未知'
-      if (data.date) {
-        const d = new Date(data.date)
-        if (!isNaN(d.getTime())) {
-          dateStr = d.toISOString().slice(0, 10)
-          year = String(d.getFullYear())
-          month = String(d.getMonth() + 1).padStart(2, '0')
-        }
-      }
+      const dateStr = publicationDate(data.date, file)
+      const year = dateStr ? dateStr.slice(0, 4) : '未标注日期'
+      const month = dateStr ? dateStr.slice(5, 7) : ''
 
       const rawCats = Array.isArray(data.categories) ? data.categories : (data.categories ? [data.categories] : [])
       const categories = rawCats.filter(Boolean)
@@ -184,14 +196,14 @@ export default {
     const yearGroups: Record<string, Record<string, Post[]>> = {}
     for (const post of posts) {
       const y = post.year || '其他'
-      const m = post.month || '00'
+      const m = post.month
       if (!yearGroups[y]) yearGroups[y] = {}
       if (!yearGroups[y][m]) yearGroups[y][m] = []
       yearGroups[y][m].push(post)
     }
 
     const archives: ArchiveYear[] = Object.keys(yearGroups)
-      .sort((a, b) => b.localeCompare(a))
+      .sort((a, b) => a === '未标注日期' ? 1 : b === '未标注日期' ? -1 : b.localeCompare(a))
       .map(year => {
         const monthsObj = yearGroups[year]
         let yearCount = 0

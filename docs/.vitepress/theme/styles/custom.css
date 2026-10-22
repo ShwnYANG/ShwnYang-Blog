@@ -8,6 +8,7 @@
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --vp-font-family-mono: 'Fira Code', 'JetBrains Mono', Menlo, Monaco, Consolas, monospace;
   --vp-sidebar-width: 296px;
+  --vp-layout-max-width: 100vw;
 
   --vp-shadow-glow: 0 0 30px rgba(59, 130, 246, 0.15);
   --glass-bg: rgba(255, 255, 255, 0.7);
@@ -150,6 +151,19 @@ body {
 }
 
 @media (min-width: 960px) {
+  .Layout .VPDoc.has-sidebar .content-container {
+    max-width: none;
+  }
+
+  .Layout .VPDoc.has-sidebar .content {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .Layout .VPDoc.has-sidebar .aside {
+    flex: 0 0 256px;
+  }
+
   .article-sidebar-toggle {
     position: fixed;
     top: calc(var(--vp-layout-top-height, 0px) + var(--vp-nav-height) + 24px);
@@ -209,19 +223,6 @@ body {
     padding-left: 0;
   }
 
-  /* Remove the inner reading-width cap too, so the recovered space is usable. */
-  .article-sidebar-collapsed .Layout .VPDoc.has-sidebar .content-container {
-    max-width: none;
-  }
-
-  .article-sidebar-collapsed .VPDoc .content {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .article-sidebar-collapsed .VPDoc .aside {
-    flex: 0 0 256px;
-  }
 }
 
 @media (min-width: 1440px) {
