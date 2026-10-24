@@ -1,9 +1,21 @@
 #!/usr/bin/env sh
+set -eu
 
-# 确保脚本抛出遇到的错误
-set -e
+# Copy the API endpoint for this verified site from Baidu Search Resource Platform.
+: "${BAIDU_PUSH_URL:?Set BAIDU_PUSH_URL to the API submission URL for blog.ywenrou.cn}"
+url_file="${1:-urls.txt}"
 
-# 百度链接推送
-curl -H 'Content-Type:text/plain' --data-binary @urls.txt "http://data.zz.baidu.com/urls?site=https://xugaoyi.com&token=T5PEAzhGaPNbjQ2X"
+if [ ! -s "$url_file" ]; then
+  echo "Provide a non-empty URL list (one URL per line): $url_file" >&2
+  exit 1
+fi
 
-rm -rf urls.txt # 删除文件
+if awk 'NF && $0 !~ /^https:\/\/blog\.ywenrou\.cn\// { invalid = 1 } END { exit !invalid }' "$url_file"; then
+  echo 'The URL list contains addresses outside https://blog.ywenrou.cn/.' >&2
+  exit 1
+fi
+
+curl --fail-with-body --silent --show-error \
+  -H 'Content-Type: text/plain' \
+  --data-binary "@$url_file" \
+  "$BAIDU_PUSH_URL"
