@@ -59,9 +59,14 @@ body {
 
 /* Nav & Header polish */
 .VPNav {
+  border-bottom: 1px solid var(--vp-c-divider) !important;
+}
+
+/* Keep blur off the mobile screen's ancestor: it traps fixed positioning
+   inside the header and collapses the menu to zero height. */
+.VPNavBar {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--vp-c-divider) !important;
 }
 
 /* Article navigation: clear folder levels and a visible current location. */
