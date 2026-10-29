@@ -31,7 +31,11 @@ const pagePv = new Map<string, string>()
 let lastRequestedPath = ''
 let requestId = 0
 
-type VisitCounts = { site_pv?: number; site_uv?: number; page_pv?: number }
+type VisitCounts = {
+  busuanzi_site_pv?: number | string
+  busuanzi_site_uv?: number | string
+  busuanzi_page_pv?: number | string
+}
 
 function showCount(id: string, value: string) {
   const element = document.getElementById(id)
@@ -39,49 +43,39 @@ function showCount(id: string, value: string) {
 }
 
 function showCachedCounts(path: string) {
-  if (sitePv) showCount('busuanzi_value_site_pv', sitePv)
-  if (siteUv) showCount('busuanzi_value_site_uv', siteUv)
+  if (sitePv) showCount('busuanzi_site_pv', sitePv)
+  if (siteUv) showCount('busuanzi_site_uv', siteUv)
   const cachedPagePv = pagePv.get(path)
-  if (cachedPagePv) showCount('busuanzi_value_page_pv', cachedPagePv)
+  if (cachedPagePv) showCount('busuanzi_page_pv', cachedPagePv)
 }
 
-function loadVisitCounts(path: string) {
+async function loadVisitCounts(path: string) {
   if (lastRequestedPath === path) return
   lastRequestedPath = path
   const currentRequestId = ++requestId
-  const callbackName = `BusuanziCallback_${Date.now()}_${currentRequestId}`
-  const callbacks = window as unknown as Record<string, ((counts: VisitCounts) => void) | undefined>
-  const script = document.createElement('script')
-  let settled = false
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 10000)
 
-  const cleanup = () => {
-    if (settled) return false
-    settled = true
-    window.clearTimeout(timeout)
-    script.remove()
-    delete callbacks[callbackName]
-    return true
-  }
-
-  callbacks[callbackName] = (counts) => {
-    if (!cleanup()) return
-    if (Number.isFinite(counts.site_pv)) sitePv = String(counts.site_pv)
-    if (Number.isFinite(counts.site_uv)) siteUv = String(counts.site_uv)
-    if (Number.isFinite(counts.page_pv)) pagePv.set(path, String(counts.page_pv))
+  try {
+    const response = await fetch('https://cdn.busuanzi.cc/api.php', {
+      method: 'POST',
+      body: JSON.stringify({ url: window.location.href, referrer: document.referrer }),
+      signal: controller.signal
+    })
+    if (!response.ok) throw new Error(`Busuanzi returned ${response.status}`)
+    const counts = await response.json() as VisitCounts
+    if (counts.busuanzi_site_pv != null) sitePv = String(counts.busuanzi_site_pv)
+    if (counts.busuanzi_site_uv != null) siteUv = String(counts.busuanzi_site_uv)
+    if (counts.busuanzi_page_pv != null) pagePv.set(path, String(counts.busuanzi_page_pv))
     if (window.location.pathname === path && currentRequestId === requestId) showCachedCounts(path)
+  } catch {
+    if (window.location.pathname !== path || currentRequestId !== requestId) return
+    if (!sitePv) showCount('busuanzi_site_pv', '--')
+    if (!siteUv) showCount('busuanzi_site_uv', '--')
+    if (!pagePv.has(path)) showCount('busuanzi_page_pv', '--')
+  } finally {
+    window.clearTimeout(timeout)
   }
-
-  const fail = () => {
-    if (!cleanup() || window.location.pathname !== path || currentRequestId !== requestId) return
-    if (!sitePv) showCount('busuanzi_value_site_pv', '--')
-    if (!siteUv) showCount('busuanzi_value_site_uv', '--')
-    if (!pagePv.has(path)) showCount('busuanzi_value_page_pv', '--')
-  }
-  const timeout = window.setTimeout(fail, 10000)
-  script.onerror = fail
-  script.referrerPolicy = 'no-referrer-when-downgrade'
-  script.src = `https://busuanzi.ibruce.info/busuanzi?jsonpCallback=${callbackName}`
-  document.head.appendChild(script)
 }
 
 export default {
