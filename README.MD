@@ -40,7 +40,7 @@ yarn build
 
 ## 访问统计
 
-博客使用 Vercel Web Analytics 采集真实访问数据，并通过站内 `/api/visit-counts` 显示全站和文章的累计计数。首次部署前需要：
+博客使用 Vercel Web Analytics 采集真实访问数据，并通过站内 `/api/visit-counts` 显示全站和文章的累计浏览量、访客数。首页的热门文章通过 `/api/popular-posts` 按近 30 天浏览量排序，仅展示当前站点的文章，榜单缓存 10 分钟。首次部署前需要：
 
 1. 在 Vercel 项目的 Analytics 页面启用 Web Analytics。
 2. 在 Vercel 账户设置中创建 Access Token，在项目的 Production 环境变量中设置 `VERCEL_ANALYTICS_TOKEN`。

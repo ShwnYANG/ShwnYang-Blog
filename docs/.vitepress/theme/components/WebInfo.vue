@@ -29,11 +29,10 @@ const totalWords = computed(() => {
       <div><dt>标签</dt><dd>{{ postsData.stats.totalTags }}<small>个</small></dd></div>
       <div><dt>字数</dt><dd>{{ totalWords }}</dd></div>
     </dl>
-    <div class="web-info-visits">
-      <span>本站访问 <strong id="vercel_site_pv">加载中</strong></span>
-      <i aria-hidden="true"></i>
-      <span>访客数 <strong id="vercel_site_uv">加载中</strong></span>
-    </div>
+    <dl class="web-info-visits" aria-label="累计访问数据">
+      <div><dt>累计浏览</dt><dd id="vercel_site_pv">加载中</dd></div>
+      <div><dt>累计访客</dt><dd id="vercel_site_uv">加载中</dd></div>
+    </dl>
   </section>
 </template>
 
@@ -53,8 +52,11 @@ const totalWords = computed(() => {
 .web-info-stats dt { overflow: hidden; color: var(--vp-c-text-3); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .web-info-stats dd { margin: 0; color: var(--vp-c-text-1); font: 600 14px/1 var(--vp-font-family-mono); white-space: nowrap; }
 .web-info-stats small { margin-left: 2px; color: var(--vp-c-text-3); font: 400 9px/1 var(--vp-font-family-base); }
-.web-info-visits { position: relative; display: flex; align-items: center; gap: 10px; padding-top: 11px; color: var(--vp-c-text-3); font-size: 10px; }
-.web-info-visits strong { color: var(--vp-c-text-2); font: 500 11px var(--vp-font-family-mono); }
-.web-info-visits i { width: 3px; height: 3px; border-radius: 50%; background: var(--vp-c-brand-1); }
+.web-info-visits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; padding-top: 12px; }
+.web-info-visits div { display: grid; gap: 6px; min-width: 0; padding: 2px 10px 0; border-left: 1px solid var(--vp-c-divider); }
+.web-info-visits div:first-child { padding-left: 0; border-left: 0; }
+.web-info-visits dt { color: var(--vp-c-text-3); font-size: 10px; line-height: 1.2; }
+.web-info-visits dd { margin: 0; overflow: hidden; color: var(--vp-c-text-1); font: 650 19px/1.2 var(--vp-font-family-mono); text-overflow: ellipsis; white-space: nowrap; }
+.web-info-visits div:first-child dd { color: var(--vp-c-brand-1); }
 @media (max-width: 420px) { .web-info { padding: 14px; } .web-info-kicker { font-size: 8px; } .web-info-stats { grid-template-columns: 1fr; } .web-info-stats div, .web-info-stats div:nth-child(odd) { padding: 6px 0; border-left: 0; border-bottom: 1px solid var(--vp-c-divider); } .web-info-stats div:last-child { border-bottom: 0; } }
 </style>

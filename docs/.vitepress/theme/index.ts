@@ -29,6 +29,7 @@ import './styles/custom.css'
 let sitePv = ''
 let siteUv = ''
 const pagePv = new Map<string, string>()
+const pageUv = new Map<string, string>()
 const fetchedAt = new Map<string, number>()
 const pendingPaths = new Set<string>()
 let requestId = 0
@@ -50,6 +51,8 @@ function showCachedCounts(path: string) {
   if (siteUv) showCount('vercel_site_uv', siteUv)
   const cachedPagePv = pagePv.get(path)
   showCount('vercel_page_pv', cachedPagePv || '加载中')
+  const cachedPageUv = pageUv.get(path)
+  showCount('vercel_page_uv', cachedPageUv || '加载中')
 }
 
 async function loadVisitCounts(path: string) {
@@ -66,6 +69,7 @@ async function loadVisitCounts(path: string) {
     sitePv = String(counts.site.pageviews)
     siteUv = String(counts.site.visitors)
     pagePv.set(path, String(counts.page.pageviews))
+    pageUv.set(path, String(counts.page.visitors))
     if (counts.site.pageviews > 0 && counts.page.pageviews > 0) fetchedAt.set(path, Date.now())
     else fetchedAt.delete(path)
     if (window.location.pathname === path && currentRequestId === requestId) showCachedCounts(path)
@@ -74,6 +78,7 @@ async function loadVisitCounts(path: string) {
     if (!sitePv) showCount('vercel_site_pv', '--')
     if (!siteUv) showCount('vercel_site_uv', '--')
     if (!pagePv.has(path)) showCount('vercel_page_pv', '--')
+    if (!pageUv.has(path)) showCount('vercel_page_uv', '--')
   } finally {
     pendingPaths.delete(path)
     window.clearTimeout(timeout)
