@@ -66,7 +66,8 @@ async function loadVisitCounts(path: string) {
     sitePv = String(counts.site.pageviews)
     siteUv = String(counts.site.visitors)
     pagePv.set(path, String(counts.page.pageviews))
-    fetchedAt.set(path, Date.now())
+    if (counts.site.pageviews > 0 && counts.page.pageviews > 0) fetchedAt.set(path, Date.now())
+    else fetchedAt.delete(path)
     if (window.location.pathname === path && currentRequestId === requestId) showCachedCounts(path)
   } catch {
     if (window.location.pathname !== path || currentRequestId !== requestId) return

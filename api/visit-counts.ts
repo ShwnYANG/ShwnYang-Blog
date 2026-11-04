@@ -2,7 +2,8 @@ type Counts = { pageviews: number; visitors: number }
 type VercelCountResponse = { data?: Counts }
 
 const countEndpoint = 'https://api.vercel.com/v1/query/web-analytics/visits/count'
-const cacheHeaders = { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' }
+const cachedHeaders = { 'Cache-Control': 'public, s-maxage=60' }
+const uncachedHeaders = { 'Cache-Control': 'no-store' }
 
 async function getCounts(token: string, projectId: string, teamId?: string, path?: string): Promise<Counts> {
   const url = new URL(countEndpoint)
@@ -42,7 +43,9 @@ export async function GET(request: Request): Promise<Response> {
       getCounts(token, projectId, teamId),
       getCounts(token, projectId, teamId, path)
     ])
-    return Response.json({ site, page }, { headers: cacheHeaders })
+    // Newly enabled analytics can return zero before its first events arrive.
+    const headers = site.pageviews === 0 || page.pageviews === 0 ? uncachedHeaders : cachedHeaders
+    return Response.json({ site, page }, { headers })
   } catch (error) {
     console.error('Unable to load Vercel Web Analytics counts:', error)
     return Response.json({ error: 'Analytics is unavailable' }, { status: 502 })

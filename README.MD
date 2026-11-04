@@ -46,7 +46,7 @@ yarn build
 2. 在 Vercel 账户设置中创建 Access Token，在项目的 Production 环境变量中设置 `VERCEL_ANALYTICS_TOKEN`。
 3. 确认项目已启用自动暴露系统环境变量，以便函数读取 `VERCEL_PROJECT_ID`；否则设置 `VERCEL_ANALYTICS_PROJECT_ID` 为项目 ID。
 4. 如果项目属于 Team，还要设置 `VERCEL_ANALYTICS_TEAM_ID` 为团队 ID。
-5. 重新部署生产环境。统计从启用 Web Analytics 后开始积累，不会继承原来不蒜子的数字。公开计数由站点缓存 5 分钟，因此可能略晚于 Vercel 后台。
+5. 重新部署生产环境。统计从启用 Web Analytics 后开始积累，不会继承原来不蒜子的数字。非零公开计数由站点缓存 1 分钟，因此可能略晚于 Vercel 后台；零计数不会缓存。
 
 Access Token 只供服务端函数使用，不要添加到 `VITE_` 开头的变量或提交到仓库。未配置时，页面计数显示 `--`。
 
