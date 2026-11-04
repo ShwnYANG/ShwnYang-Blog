@@ -30,9 +30,9 @@ const totalWords = computed(() => {
       <div><dt>字数</dt><dd>{{ totalWords }}</dd></div>
     </dl>
     <div class="web-info-visits">
-      <span>本站访问 <strong id="busuanzi_site_pv">加载中</strong></span>
+      <span>本站访问 <strong id="vercel_site_pv">加载中</strong></span>
       <i aria-hidden="true"></i>
-      <span>访客数 <strong id="busuanzi_site_uv">加载中</strong></span>
+      <span>访客数 <strong id="vercel_site_uv">加载中</strong></span>
     </div>
   </section>
 </template>

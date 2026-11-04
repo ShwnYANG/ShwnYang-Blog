@@ -38,6 +38,18 @@ yarn build
 
 站点部署在 Vercel。文档源文件位于 `docs/`。
 
+## 访问统计
+
+博客使用 Vercel Web Analytics 采集真实访问数据，并通过站内 `/api/visit-counts` 显示全站和文章的累计计数。首次部署前需要：
+
+1. 在 Vercel 项目的 Analytics 页面启用 Web Analytics。
+2. 在 Vercel 账户设置中创建 Access Token，在项目的 Production 环境变量中设置 `VERCEL_ANALYTICS_TOKEN`。
+3. 确认项目已启用自动暴露系统环境变量，以便函数读取 `VERCEL_PROJECT_ID`；否则设置 `VERCEL_ANALYTICS_PROJECT_ID` 为项目 ID。
+4. 如果项目属于 Team，还要设置 `VERCEL_ANALYTICS_TEAM_ID` 为团队 ID。
+5. 重新部署生产环境。统计从启用 Web Analytics 后开始积累，不会继承原来不蒜子的数字。公开计数由站点缓存 5 分钟，因此可能略晚于 Vercel 后台。
+
+Access Token 只供服务端函数使用，不要添加到 `VITE_` 开头的变量或提交到仓库。未配置时，页面计数显示 `--`。
+
 ## Fork 配置
 
 Fork 后只需要修改 [`docs/.vitepress/site.config.ts`](docs/.vitepress/site.config.ts)，即可更新站点名称、作者头像、昵称、简介、建站日期和 GitHub/Email 链接。头像文件放在 `docs/public/img/`，然后将 `author.avatar` 改为对应的 `/img/文件名` 路径。

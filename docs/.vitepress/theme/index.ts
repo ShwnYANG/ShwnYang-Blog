@@ -2,6 +2,7 @@ import { h, nextTick, onMounted } from 'vue'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import mediumZoom from 'medium-zoom'
+import { inject, pageview } from '@vercel/analytics'
 
 import HomeBento from './components/HomeBento.vue'
 import HomeRecent from './components/HomeRecent.vue'
@@ -28,13 +29,15 @@ import './styles/custom.css'
 let sitePv = ''
 let siteUv = ''
 const pagePv = new Map<string, string>()
-let lastRequestedPath = ''
+const fetchedAt = new Map<string, number>()
+const pendingPaths = new Set<string>()
 let requestId = 0
+let lastTrackedPath = ''
+let analyticsInitialized = false
 
 type VisitCounts = {
-  busuanzi_site_pv?: number | string
-  busuanzi_site_uv?: number | string
-  busuanzi_page_pv?: number | string
+  site: { pageviews: number; visitors: number }
+  page: { pageviews: number; visitors: number }
 }
 
 function showCount(id: string, value: string) {
@@ -43,39 +46,43 @@ function showCount(id: string, value: string) {
 }
 
 function showCachedCounts(path: string) {
-  if (sitePv) showCount('busuanzi_site_pv', sitePv)
-  if (siteUv) showCount('busuanzi_site_uv', siteUv)
+  if (sitePv) showCount('vercel_site_pv', sitePv)
+  if (siteUv) showCount('vercel_site_uv', siteUv)
   const cachedPagePv = pagePv.get(path)
-  if (cachedPagePv) showCount('busuanzi_page_pv', cachedPagePv)
+  showCount('vercel_page_pv', cachedPagePv || '加载中')
 }
 
 async function loadVisitCounts(path: string) {
-  if (lastRequestedPath === path) return
-  lastRequestedPath = path
+  if (pendingPaths.has(path) || Date.now() - (fetchedAt.get(path) || 0) < 60000) return
+  pendingPaths.add(path)
   const currentRequestId = ++requestId
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), 10000)
 
   try {
-    const response = await fetch('https://cdn.busuanzi.cc/api.php', {
-      method: 'POST',
-      body: JSON.stringify({ url: window.location.href, referrer: document.referrer }),
-      signal: controller.signal
-    })
-    if (!response.ok) throw new Error(`Busuanzi returned ${response.status}`)
+    const response = await fetch(`/api/visit-counts?path=${encodeURIComponent(path)}`, { signal: controller.signal })
+    if (!response.ok) throw new Error(`Visit counts returned ${response.status}`)
     const counts = await response.json() as VisitCounts
-    if (counts.busuanzi_site_pv != null) sitePv = String(counts.busuanzi_site_pv)
-    if (counts.busuanzi_site_uv != null) siteUv = String(counts.busuanzi_site_uv)
-    if (counts.busuanzi_page_pv != null) pagePv.set(path, String(counts.busuanzi_page_pv))
+    sitePv = String(counts.site.pageviews)
+    siteUv = String(counts.site.visitors)
+    pagePv.set(path, String(counts.page.pageviews))
+    fetchedAt.set(path, Date.now())
     if (window.location.pathname === path && currentRequestId === requestId) showCachedCounts(path)
   } catch {
     if (window.location.pathname !== path || currentRequestId !== requestId) return
-    if (!sitePv) showCount('busuanzi_site_pv', '--')
-    if (!siteUv) showCount('busuanzi_site_uv', '--')
-    if (!pagePv.has(path)) showCount('busuanzi_page_pv', '--')
+    if (!sitePv) showCount('vercel_site_pv', '--')
+    if (!siteUv) showCount('vercel_site_uv', '--')
+    if (!pagePv.has(path)) showCount('vercel_page_pv', '--')
   } finally {
+    pendingPaths.delete(path)
     window.clearTimeout(timeout)
   }
+}
+
+function trackPageview(path: string) {
+  if (!analyticsInitialized || lastTrackedPath === path) return
+  lastTrackedPath = path
+  pageview({ path })
 }
 
 export default {
@@ -108,6 +115,7 @@ export default {
       if (typeof window === 'undefined') return
       await nextTick()
       const path = window.location.pathname
+      trackPageview(path)
       showCachedCounts(path)
       loadVisitCounts(path)
     }
@@ -120,7 +128,12 @@ export default {
     }
     onMounted(() => {
       initZoom()
+      if (!analyticsInitialized) {
+        inject({ disableAutoTrack: true })
+        analyticsInitialized = true
+      }
       const path = window.location.pathname
+      trackPageview(path)
       showCachedCounts(path)
       loadVisitCounts(path)
     })
