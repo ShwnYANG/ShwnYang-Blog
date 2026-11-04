@@ -64,7 +64,15 @@ onMounted(async () => {
             <span class="popular-title">{{ item.post.title }}</span>
             <span class="popular-track">{{ sectionNames[item.post.track] || '技术随笔' }}</span>
           </span>
-          <span class="popular-views"><strong>{{ item.pageviews }}</strong><small>浏览</small></span>
+          <span class="popular-views">
+            <span class="popular-count">
+              <svg v-if="index < 3" class="popular-fire" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 22c4.4 0 8-3.6 8-8 0-3.1-1.7-5.6-4.5-7.8.1 2.2-1 3.9-2.4 4.8C13 7.4 10.8 4.2 8 2c.3 3.2-.8 5.2-2.4 7.1C4.6 10.4 4 12.1 4 14c0 4.4 3.6 8 8 8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <strong>{{ item.pageviews }}</strong>
+            </span>
+            <small>浏览</small>
+          </span>
         </a>
       </li>
     </ol>
@@ -90,6 +98,8 @@ onMounted(async () => {
 .popular-title { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; color: var(--vp-c-text-1); font-size: 12px; font-weight: 550; line-height: 1.45; }
 .popular-track { color: var(--vp-c-text-3); font-size: 10px; line-height: 1.2; }
 .popular-views { display: grid; gap: 3px; flex: 0 0 auto; align-self: center; text-align: right; }
+.popular-count { display: inline-flex; align-items: center; justify-content: flex-end; gap: 3px; }
+.popular-fire { width: 13px; height: 13px; flex: 0 0 13px; color: #f97316; }
 .popular-views strong { color: var(--vp-c-text-2); font: 600 13px/1 var(--vp-font-family-mono); }
 .popular-views small { color: var(--vp-c-text-3); font-size: 9px; }
 .popular-message { margin: 0; padding: 18px 0 2px; color: var(--vp-c-text-3); font-size: 11px; line-height: 1.5; }
