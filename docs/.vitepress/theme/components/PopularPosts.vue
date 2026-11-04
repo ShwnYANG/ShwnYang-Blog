@@ -80,9 +80,9 @@ onMounted(async () => {
 .popular-kicker { color: var(--vp-c-text-3); font: 600 9px/1 var(--vp-font-family-mono); letter-spacing: .14em; }
 .popular-heading h3 { margin: 5px 0 0; color: var(--vp-c-text-1); font-size: 15px; line-height: 1.2; font-weight: 650; }
 .popular-period { flex: 0 0 auto; padding: 4px 6px; border: 1px solid var(--vp-c-divider); color: var(--vp-c-text-3); font: 10px/1 var(--vp-font-family-mono); }
-.popular-list { margin: 0; padding: 0; list-style: none; }
+.popular-list { margin: 6px 0 0; padding: 0; list-style: none; }
 .popular-list li + li { border-top: 1px solid var(--vp-c-divider); }
-.popular-list a { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 11px 1px; color: inherit; text-decoration: none; transition: background-color .2s; }
+.popular-list a { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 13px 10px; color: inherit; text-decoration: none; transition: background-color .2s; }
 .popular-list a:hover, .popular-list a:focus-visible { background: var(--vp-c-brand-soft); outline: none; }
 .popular-rank { flex: 0 0 22px; align-self: flex-start; color: var(--vp-c-text-3); font: 700 15px/1.4 var(--vp-font-family-mono); }
 .popular-list li:first-child .popular-rank { color: var(--vp-c-brand-1); }
